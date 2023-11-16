@@ -1,0 +1,50 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: optional:configserver:http://127.0.0.1:8888
+  # rabbitmq settings
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+  # h2 settings
+  # dynamoDB 설정 추가 필요
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+      path: /h2-console
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:promotion-service;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false;MODE=MySQL
+  jpa:
+    hibernate:
+      ddl-auto: create
+    generate-ddl: true
+    # Bean이 생성되기 전에 ddl 실행
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+      springframework:
+        jdbc:
+          core:
+            JdbcTemplate: DEBUG
