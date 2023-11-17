@@ -5,7 +5,7 @@ spring:
     activate:
       on-profile: local,dev,prod
   application:
-    name: notification-service
+    name: promotion-service
 management:
   endpoints:
     web:
