@@ -10,7 +10,6 @@ spring:
     username: guest
     password: guest
   # h2 settings
-  # dynamoDB 설정 추가 필요
   h2:
     console:
       enabled: true
@@ -29,6 +28,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  # AWS DynamoDB settings 어떻게 될지 정해지지않아서 이렇게 두었음. Local설정.
+  data:
+    dynamodb:
+      endpoint: http://localhost:8001  # DynamoDB Local의 엔드포인트. port번호 아직 안정해졌음.
+      region: us-west-2  # 지역 설정, 로컬에서 큰 영향을 미치지는 않지만 필요함
+      access-key: dummy-access-key  # 액세스 키, 로컬에서는 실제 값 불필요
+      secret-key: dummy-secret-key  # 비밀 키, 로컬에서는 실제 값 불필요
 
 eureka:
   client:

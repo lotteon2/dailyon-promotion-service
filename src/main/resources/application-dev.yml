@@ -16,6 +16,13 @@ spring:
     url: jdbc:mysql://localhost:3306/promotion-service
     username: root
     password: 11111111
+  # AWS DynamoDB settings 어떻게 될지 정해지지않아서 이렇게 두었음.
+  data:
+    dynamodb:
+      endpoint: https://dynamodb.us-west-2.amazonaws.com # Use appropriate AWS Region
+      region: us-west-2  # Use appropriate AWS Region
+      access-key: access-key  # if not using environment variables or IAM
+      secret-key: secret-key  # if not using environment variables or IAM
 eureka:
   client:
     register-with-eureka: true
