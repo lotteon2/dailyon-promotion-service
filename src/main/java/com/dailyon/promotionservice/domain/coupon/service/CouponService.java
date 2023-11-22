@@ -1,19 +1,38 @@
 package com.dailyon.promotionservice.domain.coupon.service;
 
 
+import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class CouponService {
 
     private final CouponInfoRepository couponInfoRepository;
     private final CouponAppliesToRepository couponAppliesToRepository;
     private final MemberCouponRepository memberCouponRepository;
+
+    @Transactional
+    public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
+        CouponInfo couponInfo = couponInfoRepository.save(request.toEntity());
+        CouponAppliesTo couponAppliesTo = CouponAppliesTo.builder()
+                .couponInfoId(couponInfo.getId())
+                .appliesToId(request.getAppliesToId())
+                .appliesToType(CouponType.valueOf(request.getAppliesToType()))
+                .couponInfo(couponInfo)
+                .build();
+        couponAppliesToRepository.save(couponAppliesTo);
+        return couponInfo.getId();
+    }
 }
