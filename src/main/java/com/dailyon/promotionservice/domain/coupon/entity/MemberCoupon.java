@@ -22,7 +22,10 @@ public class MemberCoupon {
     @JoinColumn(name = "coupon_info_id", referencedColumnName = "id", insertable = false, updatable = false)
     private CouponInfo couponInfo;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
     private Boolean isUsed;
 
     public static class MemberCouponId implements Serializable {

@@ -37,6 +37,14 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+//  AWS SDK v2는 spring-data-dynamodb5.1과 호환성 문제. 그냥 쿼리 짜기로 했음.
+	implementation platform('software.amazon.awssdk:bom:2.20.85')
+	implementation 'software.amazon.awssdk:dynamodb-enhanced'
+
+	// AWS SDK for Java v1 DynamoDB 사용하지 않기로 함.
+//	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.253'
+//	implementation "com.github.derjust:spring-data-dynamodb:5.1.0"
+
 //	implementation 'org.springframework.boot:spring-boot-starter-cache'
 //	implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
 //	implementation 'org.springframework.cloud:spring-cloud-starter-config'

@@ -11,8 +11,10 @@ public class CouponAppliesTo {
     @Id
     private Long couponInfoId;
 
+    @Column(nullable = false)
     private Long appliesToId;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CouponType couponType;
 
