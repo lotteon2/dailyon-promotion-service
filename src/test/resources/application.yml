@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:~/promotion-service
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  profiles:
+    active: test
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false # 테스트 코드 동작시 false로 해야 한다.
+
+logging:
+  level:
+    org:
+      springframework:
+        transaction:
+          interceptor: TRACE
