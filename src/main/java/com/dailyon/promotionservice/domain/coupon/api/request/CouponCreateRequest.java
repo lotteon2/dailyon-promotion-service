@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.api.request;
 
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
@@ -9,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @AllArgsConstructor
 public class CouponCreateRequest {
 
