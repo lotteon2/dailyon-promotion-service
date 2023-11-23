@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.service;
 
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponType;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,6 +36,16 @@ public class CouponService {
                 .couponInfo(couponInfo)
                 .build();
         couponAppliesToRepository.save(couponAppliesTo);
+        return couponInfo.getId();
+    }
+
+    @Transactional
+    public Long modifyCouponInfo(CouponModifyRequest request, Long couponInfoId) {
+        CouponInfo couponInfo = couponInfoRepository.findById(couponInfoId)
+                .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found for id: " + couponInfoId));
+        couponInfo.updateDetails(request);
+        couponInfoRepository.save(couponInfo);
+
         return couponInfo.getId();
     }
 }
