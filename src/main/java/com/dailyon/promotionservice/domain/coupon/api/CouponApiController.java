@@ -20,7 +20,7 @@ public class CouponApiController {
     @PostMapping("") // 생성 후 생성된 리소스 바로 접근할 수 있게 id값을 반환.
     public ResponseEntity<Long> createCouponInfoWithAppliesTo(@Valid @RequestBody CouponCreateRequest request) {
         if (!request.isValidDiscount()) {
-            throw new IllegalArgumentException("Invalid discount: either rate or amount must be set, not both");
+            throw new IllegalStateException("Invalid discount: either rate or amount must be set, not both");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(couponService.createCouponInfoWithAppliesTo(request));
     }
@@ -29,7 +29,7 @@ public class CouponApiController {
     public ResponseEntity<Long> modifyCouponInfo(@PathVariable Long couponInfoId,
                                                            @Valid @RequestBody CouponModifyRequest request) {
         if (!request.isValidDiscount()) {
-            throw new IllegalArgumentException("Invalid discount: either rate or amount must be set, not both");
+            throw new IllegalStateException("Invalid discount: either rate or amount must be set, not both");
         }
         Long updatedCouponId = couponService.modifyCouponInfo(request, couponInfoId);
 
