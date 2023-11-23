@@ -1,6 +1,7 @@
 package com.dailyon.promotionservice.domain.coupon.api.request;
 
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
@@ -8,6 +9,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
+@AllArgsConstructor
 public class CouponCreateRequest {
 
     @NotEmpty private String name; // 기본은 FE에서 기본값으로 넣어줌. BE 입장에서는 not null임.
