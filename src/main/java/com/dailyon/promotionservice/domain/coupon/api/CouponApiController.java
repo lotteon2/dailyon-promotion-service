@@ -1,14 +1,13 @@
 package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -24,5 +23,16 @@ public class CouponApiController {
             throw new IllegalArgumentException("Invalid discount: either rate or amount must be set, not both");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(couponService.createCouponInfoWithAppliesTo(request));
+    }
+
+    @PatchMapping("/{couponInfoId}") // 바꾼 리소스의 id값을 반환
+    public ResponseEntity<Long> modifyCouponInfo(@PathVariable Long couponInfoId,
+                                                           @Valid @RequestBody CouponModifyRequest request) {
+        if (!request.isValidDiscount()) {
+            throw new IllegalArgumentException("Invalid discount: either rate or amount must be set, not both");
+        }
+        Long updatedCouponId = couponService.modifyCouponInfo(request, couponInfoId);
+
+        return ResponseEntity.ok(updatedCouponId);
     }
 }
