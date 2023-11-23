@@ -22,7 +22,7 @@ public class CouponCreateRequest {
     @NotNull private Integer issuedQuantity;
 
     @NotEmpty private String appliesToType; //coupon 도메인의 entity 패키지에 있는 CouponType ENUM 클래스와 호환
-    @NotNull  private Long appliesToId;
+    @NotNull private Long appliesToId;
 
     @NotNull private Boolean requiresConcurrencyControl;
     private String targetImgUrl;
