@@ -29,13 +29,14 @@ public class CouponService {
     @Transactional
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
         CouponInfo couponInfo = couponInfoRepository.save(request.toEntity());
-        CouponAppliesTo couponAppliesTo = CouponAppliesTo.builder()
-                .couponInfoId(couponInfo.getId())
-                .appliesToId(request.getAppliesToId())
-                .appliesToType(CouponType.valueOf(request.getAppliesToType()))
-                .couponInfo(couponInfo)
-                .build();
-        couponAppliesToRepository.save(couponAppliesTo);
+        CouponType appliesToType = CouponType.fromString(request.getAppliesToType());
+        
+        CouponAppliesTo appliesTo = CouponAppliesTo.createWithCouponInfo(
+                couponInfo,
+                request.getAppliesToId(),
+                appliesToType
+        );
+        couponAppliesToRepository.save(appliesTo);
         return couponInfo.getId();
     }
 
