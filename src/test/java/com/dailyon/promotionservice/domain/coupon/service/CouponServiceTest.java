@@ -3,6 +3,7 @@ package com.dailyon.promotionservice.domain.coupon.service;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
@@ -18,13 +19,16 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 @SpringBootTest
 public class CouponServiceTest {
     @Autowired EntityManager em;
@@ -38,8 +42,8 @@ public class CouponServiceTest {
 
     @AfterEach
     void tearDown() {
-        couponInfoRepository.deleteAllInBatch();
         couponAppliesToRepository.deleteAllInBatch();
+        couponInfoRepository.deleteAllInBatch();
         memberCouponRepository.deleteAllInBatch();
     }
 
@@ -48,77 +52,66 @@ public class CouponServiceTest {
     @DisplayName("쿠폰 정보를 입력 받아 쿠폰을 생성한다.")
     void createCouponInfoWithAppliesToSuccessfully() {
         // given
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("Summer Sale")
-                .discountAmount(1000L) // discountRate는 null
-                .startAt(LocalDateTime.now().plusDays(1))
-                .endAt(LocalDateTime.now().plusDays(30))
-                .issuedQuantity(500)
-                .appliesToType("PRODUCT")
-                .appliesToId(1L)
-                .requiresConcurrencyControl(false)
-                .targetImgUrl("http://example.com/coupon.jpg")
-                .build();
-        CouponInfo couponInfoFromRequest = request.toEntity();
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1);
+        LocalDateTime endTime = LocalDateTime.now().plusDays(10);
 
-        // simulate the repository behavior
-        when(couponInfoRepository.save(any(CouponInfo.class))).thenAnswer(invocation -> {
-            CouponInfo arg = invocation.getArgument(0);
-            ReflectionTestUtils.setField(arg, "id", 1L); // Use reflection to set the ID
-            return arg;
-        });
+        CouponCreateRequest request = new CouponCreateRequest(
+                "Summer Sale",
+                20, // discountRate
+                null, // discountAmount는 controller에서 XOR validation
+                startTime,
+                endTime,
+                1000,
+                "PRODUCT",
+                1L, // product ID 임의로 넣음.
+                true,
+                "https://image.url/summer-sale.jpg"
+        );
 
         // when
-        Long couponId = couponService.createCouponInfoWithAppliesTo(request);
+        Long createdCouponId = couponService.createCouponInfoWithAppliesTo(request);
 
         // then
-        assertThat(couponId).isEqualTo(1L);
-        verify(couponInfoRepository).save(refEq(couponInfoFromRequest, "discountRate")); //discountRate - null 무시
-        verify(couponAppliesToRepository).save(any(CouponAppliesTo.class));
+        CouponInfo couponInfo = em.find(CouponInfo.class, createdCouponId);
+        CouponAppliesTo couponAppliesTo = em.find(CouponAppliesTo.class, createdCouponId);
+
+        assertThat(couponInfo).isNotNull();
+        assertThat(couponInfo.getName()).isEqualTo(request.getName());
+        assertThat(couponInfo.getDiscountRate()).isEqualTo(request.getDiscountRate());
+        assertThat(couponInfo.getStartAt()).isEqualTo(startTime);
+        assertThat(couponInfo.getEndAt()).isEqualTo(endTime);
+        assertThat(couponInfo.getIssuedQuantity()).isEqualTo(request.getIssuedQuantity());
+
+        assertThat(couponAppliesTo).isNotNull();
+        assertThat(couponAppliesTo.getCouponInfo()).isEqualTo(couponInfo);
+        assertThat(couponAppliesTo.getAppliesToId()).isEqualTo(request.getAppliesToId());
+        assertThat(couponAppliesTo.getAppliesToType()).isEqualTo(CouponType.fromString(request.getAppliesToType()));
     }
 
     @Test
-    @DisplayName("할인율과 할인액을 동시에 설정하면 예외가 발생한다.")
-    void createCouponInfoWithInvalidDiscount() {
+    @DisplayName("CouponInfo 생성시 존재하지 않는 appliesToType을 입력하면 예외가 발생한다.")
+    void createCouponInfoWithInvalidAppliesToType_ShouldThrowException() {
         // given
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("Summer Sale")
-                .discountRate(10) // Discount rate provided
-                .discountAmount(1000L) // Discount amount also provided, which is invalid
-                .startAt(LocalDateTime.now().plusDays(1))
-                .endAt(LocalDateTime.now().plusDays(30))
-                .issuedQuantity(500)
-                .appliesToType("PRODUCT")
-                .appliesToId(1L)
-                .requiresConcurrencyControl(true)
-                .targetImgUrl("http://example.com/coupon.jpg")
-                .build();
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1);
+        LocalDateTime endTime = LocalDateTime.now().plusDays(10);
+
+        CouponCreateRequest request = new CouponCreateRequest(
+                "Invalid Type Sale",
+                null,
+                5000L,
+                startTime,
+                endTime,
+                1000,
+                "INVALID_TYPE", // CouponType ENUM에 존재하는 값일것.
+                1L,
+                true,
+                "https://image.url/invalid-type-sale.jpg"
+        );
 
         // when // then
-        assertThatThrownBy(() -> couponService.createCouponInfoWithAppliesTo(request))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Invalid discount: either rate or amount must be set, not both");
+        assertThrows(IllegalArgumentException.class,
+                () -> couponService.createCouponInfoWithAppliesTo(request),
+                "No enum constant for string value: INVALID_TYPE");
     }
 
-    @Test
-    @DisplayName("할인율과 할인액 둘 다 설정되지 않은 경우 예외가 발생한다.")
-    void createCouponInfoWithNoDiscountProvided() {
-        // given
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("Summer Sale")
-                // Both discountRate and discountAmount are not set. XOR logic
-                .startAt(LocalDateTime.now().plusDays(1))
-                .endAt(LocalDateTime.now().plusDays(30))
-                .issuedQuantity(500)
-                .appliesToType("PRODUCT")
-                .appliesToId(1L)
-                .requiresConcurrencyControl(true)
-                .targetImgUrl("http://example.com/coupon.jpg")
-                .build();
-
-        // when // then
-        assertThatThrownBy(() -> couponService.createCouponInfoWithAppliesTo(request))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Invalid discount: either rate or amount must be set, not both nor none");
-    }
 }
