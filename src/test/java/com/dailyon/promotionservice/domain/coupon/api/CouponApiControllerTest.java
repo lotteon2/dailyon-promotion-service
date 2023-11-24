@@ -112,10 +112,9 @@ public class CouponApiControllerTest extends ControllerTestSupport {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
-                .andExpect(status().isBadRequest());
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.message").value("Invalid request"))
-//                .andExpect(jsonPath("$.validation.startAt").value("startAt can not be null"));
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0]").value("startAt: must not be null"));
     }
 
 
