@@ -29,5 +29,25 @@ public class CouponAppliesTo {
     @JoinColumn(name = "coupon_info_id")
     private CouponInfo couponInfo;
 
+    @Builder
+    protected CouponAppliesTo(CouponInfo couponInfo, Long appliesToId, CouponType appliesToType) {
+        this.couponInfo = couponInfo;
+        this.couponInfoId = (couponInfo != null ? couponInfo.getId() : null);
+        this.appliesToId = appliesToId;
+        this.appliesToType = appliesToType;
+    }
+
+    public static CouponAppliesTo createWithCouponInfo(CouponInfo couponInfo, Long appliesToId, CouponType appliesToType) {
+        if (couponInfo == null || couponInfo.getId() == null) {
+            throw new IllegalStateException("CouponInfo must be persisted before creating CouponAppliesTo");
+        }
+
+        return CouponAppliesTo.builder()
+                .couponInfo(couponInfo)
+                .appliesToId(appliesToId)
+                .appliesToType(appliesToType)
+                .build();
+    }
+
     protected CouponAppliesTo() {} // JPA를 위한 protected 빈 생성자
 }
