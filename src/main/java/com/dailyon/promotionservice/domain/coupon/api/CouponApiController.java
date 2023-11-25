@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,12 @@ public class CouponApiController {
 
     @PostMapping("") // 생성 후 생성된 리소스 바로 접근할 수 있게 id값을 반환.
     public ResponseEntity<Long> createCouponInfoWithAppliesTo(@Valid @RequestBody CouponCreateRequest request) {
-        if (!request.isValidDiscount()) {
-            throw new InvalidDiscountException();
+        String invalidDiscountMessage = request.getInvalidDiscountMessage();
+        if (invalidDiscountMessage != null) {
+            throw new InvalidDiscountException(invalidDiscountMessage);
+        }
+        if (!request.isValidDateRange()) {
+            throw new InvalidDateRangeException();
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(couponService.createCouponInfoWithAppliesTo(request));
@@ -31,8 +36,12 @@ public class CouponApiController {
     @PatchMapping("/{couponInfoId}") // 바꾼 리소스의 id값을 반환
     public ResponseEntity<Long> modifyCouponInfo(@PathVariable Long couponInfoId,
                                                            @Valid @RequestBody CouponModifyRequest request) {
-        if (!request.isValidDiscount()) {
-            throw new InvalidDiscountException();
+        String invalidDiscountMessage = request.getInvalidDiscountMessage();
+        if (invalidDiscountMessage != null) {
+            throw new InvalidDiscountException(invalidDiscountMessage);
+        }
+        if (!request.isValidDateRange()) {
+            throw new InvalidDateRangeException();
         }
         Long updatedCouponId = couponService.modifyCouponInfo(request, couponInfoId);
 
