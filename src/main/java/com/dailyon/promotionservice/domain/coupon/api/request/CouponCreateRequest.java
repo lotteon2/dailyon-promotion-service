@@ -33,7 +33,6 @@ public class CouponCreateRequest {
     @NotNull private Boolean requiresConcurrencyControl;
     private String targetImgUrl;
 
-
     // 할인 유효성에 대한 검증 결과를 String으로 반환. 유효할 경우 null을 반환.
     public String getInvalidDiscountMessage() {
         DiscountType type = DiscountType.fromString(discountType);
