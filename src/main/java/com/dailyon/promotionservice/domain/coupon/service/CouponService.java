@@ -45,7 +45,6 @@ public class CouponService {
         CouponInfo couponInfo = couponInfoRepository.findById(couponInfoId)
                 .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found for id: " + couponInfoId));
         couponInfo.updateDetails(request);
-        couponInfoRepository.save(couponInfo);
 
         return couponInfo.getId();
     }
