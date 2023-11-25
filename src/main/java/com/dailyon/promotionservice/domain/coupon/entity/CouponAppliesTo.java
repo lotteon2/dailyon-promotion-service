@@ -21,7 +21,7 @@ public class CouponAppliesTo {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private CouponType appliesToType;
+    private CouponTargetType appliesToType;
 
     // 식별관계. CouponInfo Entity와의 OneToOne 매핑을 명시.
     @OneToOne
@@ -30,14 +30,14 @@ public class CouponAppliesTo {
     private CouponInfo couponInfo;
 
     @Builder
-    protected CouponAppliesTo(CouponInfo couponInfo, Long appliesToId, CouponType appliesToType) {
+    protected CouponAppliesTo(CouponInfo couponInfo, Long appliesToId, CouponTargetType appliesToType) {
         this.couponInfo = couponInfo;
         this.couponInfoId = (couponInfo != null ? couponInfo.getId() : null);
         this.appliesToId = appliesToId;
         this.appliesToType = appliesToType;
     }
 
-    public static CouponAppliesTo createWithCouponInfo(CouponInfo couponInfo, Long appliesToId, CouponType appliesToType) {
+    public static CouponAppliesTo createWithCouponInfo(CouponInfo couponInfo, Long appliesToId, CouponTargetType appliesToType) {
         if (couponInfo == null || couponInfo.getId() == null) {
             throw new IllegalStateException("CouponInfo must be persisted before creating CouponAppliesTo");
         }

@@ -22,11 +22,12 @@ public class CouponInfo {
     @Column(nullable = false)
     private String name;
 
-//    @Column(nullable = false) // 두 값중 하나만 값이 있음. 유효성 검사 따로 진행.
-    private Long discountAmount;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private DiscountType discountType;
 
-//    @Column(nullable = false)
-    private Integer discountRate;
+    @Column(nullable = false)
+    private Long discountValue;
 
     @Column(nullable = false)
     private LocalDateTime startAt;
@@ -37,9 +38,8 @@ public class CouponInfo {
     @Column(nullable = false)
     private Integer issuedQuantity;
 
-    @Builder.Default
     @Column(nullable = false)
-    private Integer usedQuantity = 0;
+    private Integer remainingQuantity;
 
     @Builder.Default
     @Column(nullable = false) // true시, redis 통해 동시관리 들어감.
@@ -51,8 +51,12 @@ public class CouponInfo {
 
     public void updateDetails(CouponModifyRequest request) {
         if (request.getName() != null) { this.name = request.getName(); }
-        if (request.getDiscountAmount() != null) { this.discountAmount = request.getDiscountAmount(); }
-        if (request.getDiscountRate() != null) { this.discountRate = request.getDiscountRate(); }
+
+        if (request.getDiscountValue() != null && request.getDiscountType() != null) {
+            this.discountValue = request.getDiscountValue();
+            this.discountType = DiscountType.fromString(request.getDiscountType());
+        }
+
         if (request.getStartAt() != null) { this.startAt = request.getStartAt(); }
         if (request.getEndAt() != null) { this.endAt = request.getEndAt(); }
         if (request.getIssuedQuantity() != null) { this.issuedQuantity = request.getIssuedQuantity(); }
