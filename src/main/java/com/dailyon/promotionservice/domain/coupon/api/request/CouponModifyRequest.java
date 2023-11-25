@@ -1,6 +1,7 @@
 package com.dailyon.promotionservice.domain.coupon.api.request;
 
 import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
@@ -23,8 +24,9 @@ public class CouponModifyRequest {
 
     @NotNull private Integer issuedQuantity;
 
-    @NotEmpty private String appliesToType; //coupon 도메인의 entity 패키지에 있는 CouponTargetType ENUM 클래스와 호환
-    @NotNull private Long appliesToId;
+    // 쿠폰정보에 대해서만 수정을 받고 있음.
+//    @NotEmpty private String appliesToType; //coupon 도메인의 entity 패키지에 있는 CouponTargetType ENUM 클래스와 호환
+//    @NotNull private Long appliesToId;
 
     @NotNull private Boolean requiresConcurrencyControl;
     private String targetImgUrl;
@@ -50,6 +52,7 @@ public class CouponModifyRequest {
         return null; // 유효성 검사를 통과
     }
 
+    @JsonIgnore // 테스트케이스 돌릴 때, Jackson에서 멋대로 작동시켜서 에러를 낸 것에 대한 처리. 다른 방법 고민 중.
     public boolean isValidDateRange() {
         return startAt.isBefore(endAt);
     }
