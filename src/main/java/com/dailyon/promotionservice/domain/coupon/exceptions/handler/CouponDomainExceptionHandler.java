@@ -1,6 +1,7 @@
 package com.dailyon.promotionservice.domain.coupon.exceptions.handler;
 
 import com.dailyon.promotionservice.domain.coupon.api.CouponApiController;
+import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -16,6 +17,11 @@ public class CouponDomainExceptionHandler {
 
     @ExceptionHandler(InvalidDiscountException.class)
     public ResponseEntity<String> handleInvalidDiscount(InvalidDiscountException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidDateRangeException.class)
+    public ResponseEntity<String> handleInvalidDateRangeException(InvalidDateRangeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
