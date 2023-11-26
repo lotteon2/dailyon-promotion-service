@@ -14,20 +14,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.persistence.EntityNotFoundException;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 
 public class CouponApiControllerTest extends ControllerTestSupport {
@@ -352,5 +354,36 @@ public class CouponApiControllerTest extends ControllerTestSupport {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
                 .andExpect(content().string("Percentage discount value must be between 0 and 100."));
+    }
+
+    @DisplayName("[관리자] 쿠폰 삭제 - 유효한 요청/ 존재하는 쿠폰")
+    @Test
+    void deleteCouponInfoWithExistingCoupon() throws Exception {
+        // Given
+        Long couponInfoId = 1L; // 존재한다고 가정
+
+        // When // Then
+        mockMvc
+                .perform(delete("/coupons/{couponInfoId}", couponInfoId))
+                .andDo(print())
+                .andExpect(status().isNoContent()); // Expect 204 -> successful deletion
+
+        verify(couponService, times(1)).deleteCouponInfoWithAppliesTo(couponInfoId);
+    }
+
+    @DisplayName("[관리자] 쿠폰 삭제 - 존재하지 않는 쿠폰")
+    @Test
+    void deleteCouponInfoWithNonExistingCoupon() throws Exception {
+        // Given
+        Long couponInfoId = 999L; // 존재하지 않는다고 가정
+        doThrow(new EntityNotFoundException("Coupon not found")).when(couponService).deleteCouponInfoWithAppliesTo(anyLong());
+
+        // When // Then
+        mockMvc
+                .perform(delete("/coupons/{couponInfoId}", couponInfoId))
+                .andDo(print())
+                .andExpect(status().isNotFound()); // Expect 404 Not Found for a missing coupon
+
+        verify(couponService, times(1)).deleteCouponInfoWithAppliesTo(couponInfoId);
     }
 }
