@@ -74,5 +74,8 @@ public class CouponInfo {
         if (request.getTargetImgUrl() != null) { this.targetImgUrl = request.getTargetImgUrl(); }
     }
 
+    public void invalidateCoupon() {
+        this.remainingQuantity = 0;
+    }
 
 }
