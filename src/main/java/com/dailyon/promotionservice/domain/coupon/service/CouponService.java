@@ -57,6 +57,7 @@ public class CouponService {
         // 연관된 CouponAppliesTo entity는 cascade에 의해 삭제됨.
         couponInfoRepository.delete(couponInfo);
     }
+    
 
 
 }
