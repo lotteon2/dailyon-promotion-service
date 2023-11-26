@@ -24,9 +24,8 @@ public class CouponAppliesTo {
     private CouponTargetType appliesToType;
 
     // 식별관계. CouponInfo Entity와의 OneToOne 매핑을 명시.
-    @OneToOne
+    @OneToOne(mappedBy = "appliesTo") // "appliesTo"라는 필드 이름으로 명명
     @MapsId
-    @JoinColumn(name = "coupon_info_id")
     private CouponInfo couponInfo;
 
     @Builder
