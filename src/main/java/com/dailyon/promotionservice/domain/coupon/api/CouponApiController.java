@@ -47,4 +47,12 @@ public class CouponApiController {
 
         return ResponseEntity.ok(updatedCouponId);
     }
+
+
+    @PatchMapping("/{couponInfoId}/invalidate")
+    public ResponseEntity<Long> invalidateCoupon(@PathVariable Long couponInfoId) {
+        Long invalidatedCouponId = couponService.invalidateCoupon(couponInfoId);
+
+        return ResponseEntity.ok(invalidatedCouponId);
+    }
 }
