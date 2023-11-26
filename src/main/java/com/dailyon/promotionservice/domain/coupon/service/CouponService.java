@@ -48,4 +48,14 @@ public class CouponService {
 
         return couponInfo.getId();
     }
+
+    @Transactional
+    public Long invalidateCoupon(Long couponInfoId) {
+        CouponInfo couponInfo = couponInfoRepository.findById(couponInfoId)
+                .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found with id: " + couponInfoId));
+
+        couponInfo.invalidateCoupon();
+
+        return couponInfoId;
+    }
 }
