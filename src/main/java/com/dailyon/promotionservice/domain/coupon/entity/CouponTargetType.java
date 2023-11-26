@@ -1,11 +1,11 @@
 package com.dailyon.promotionservice.domain.coupon.entity;
 
-public enum CouponType {
+public enum CouponTargetType {
     PRODUCT,
     CATEGORY;
 
-    public static CouponType fromString(String type) {
-        for (CouponType couponType : CouponType.values()) {
+    public static CouponTargetType fromString(String type) {
+        for (CouponTargetType couponType : CouponTargetType.values()) {
             if (couponType.name().equalsIgnoreCase(type)) {
                 return couponType;
             }

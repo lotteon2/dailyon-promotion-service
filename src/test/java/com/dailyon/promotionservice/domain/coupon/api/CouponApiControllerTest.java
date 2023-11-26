@@ -2,6 +2,10 @@ package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.ControllerTestSupport;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
+import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
+import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -10,36 +14,43 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import java.time.LocalDateTime;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
-//@SpringBootTest
+
 public class CouponApiControllerTest extends ControllerTestSupport {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @DisplayName("관리자는 유효한 요청으로 쿠폰을 생성할 수 있다.")
+    @DisplayName("[관리자] 쿠폰 생성 - 유효한 요청")
     @Test
     void createCouponInfoWithValidRequest() throws Exception {
         //given
-        CouponCreateRequest request = new CouponCreateRequest(
-                "New Year Sale",
-                10,
-                null,
-                LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(10),
-                100,
-                "PRODUCT",
-                1L,
-                true,
-                "https://image.url/target.jpg"
-        );
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("New Year Sale")
+                .discountType(DiscountType.FIXED_AMOUNT.name()) // Changed to use DiscountType enum
+                .discountValue(5000L) // Assuming this is a valid fixed amount
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(10))
+                .issuedQuantity(100)
+                .appliesToType(CouponTargetType.PRODUCT.name())
+                .appliesToId(1L)
+                .requiresConcurrencyControl(true)
+                .targetImgUrl("https://image.url/target.jpg")
+                .build();
 
         // when // then
         mockMvc
@@ -57,21 +68,54 @@ public class CouponApiControllerTest extends ControllerTestSupport {
 
 
     @Test
-    @DisplayName("관리자는 할인율과 할인액을 동시에 설정할 수 없다.")
-    void createCouponInfoWithInvalidDiscount() throws Exception {
+    @DisplayName("[관리자] 쿠폰 생성 - 시작일 없는 요청")
+    void createCouponInfoWithNullStartAt() throws Exception {
         // Given
-        CouponCreateRequest request = new CouponCreateRequest(
-                "New Year Sale",
-                10, // discountRate, discountAmount 중 하나만 들어오도록 XOR로 유효성 검사를 해둠.
-                5000L,
-                LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(10),
-                100,
-                "PRODUCT",
-                1L,
-                true,
-                "https://image.url/target.jpg"
-        );
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("New Year Sale")
+                .discountType(DiscountType.FIXED_AMOUNT.name()) // Changed to use DiscountType enum
+                .discountValue(5000L) // Assuming this is a valid fixed amount
+                .startAt(null)
+                .endAt(LocalDateTime.now().plusDays(10))
+                .issuedQuantity(100)
+                .appliesToType(CouponTargetType.PRODUCT.name())
+                .appliesToId(1L)
+                .requiresConcurrencyControl(true)
+                .targetImgUrl("https://image.url/target.jpg")
+                .build();
+
+        // When // Then
+        mockMvc
+                .perform(
+                        post("/coupons")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0]").value("startAt: must not be null"));
+    }
+
+
+    @Test
+    @DisplayName("[관리자] 쿠폰 생성 - startAt이 endAt보다 늦은 요청")
+    void createCouponInfoWithInvalidDateRange() throws Exception {
+        // Given
+        LocalDateTime startDateTime = LocalDateTime.now().plusDays(10);
+        LocalDateTime endDateTime = LocalDateTime.now().plusDays(1);
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("New Year Sale")
+                .discountType(DiscountType.FIXED_AMOUNT.name()) // Changed to use DiscountType enum
+                .discountValue(5000L) // Assuming this is a valid fixed amount
+                .startAt(startDateTime)
+                .endAt(endDateTime)
+                .issuedQuantity(100)
+                .appliesToType(CouponTargetType.PRODUCT.name())
+                .appliesToId(1L)
+                .requiresConcurrencyControl(true)
+                .targetImgUrl("https://image.url/target.jpg")
+                .build();
 
         // When // Then
         mockMvc
@@ -83,26 +127,26 @@ public class CouponApiControllerTest extends ControllerTestSupport {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
-                .andExpect(content().string("Invalid discount: either rate or amount must be set, not both"));
+                .andExpect(content().string("The start date must be before the end date"));
     }
 
 
+    @DisplayName("[관리자] 쿠폰 생성 - FIXED_AMOUNT의 discountValue가 음수")
     @Test
-    @DisplayName("관리자는 시작일 없이 쿠폰을 생성하려고 할 때 실패해야 한다.")
-    void createCouponInfoWithNullStartAt() throws Exception {
+    void createCouponInfoWithFixedAmountDiscountValueNegative() throws Exception {
         // Given
-        CouponCreateRequest request = new CouponCreateRequest(
-                "New Year Sale",
-                10,
-                null,
-                null, // startAt is null - 필수데이터 하나만 예시로 제거했음.
-                LocalDateTime.now().plusDays(10),
-                100,
-                "PRODUCT",
-                1L,
-                true,
-                "https://image.url/target.jpg"
-        );
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("Summer Sale")
+                .discountType(DiscountType.FIXED_AMOUNT.name())
+                .discountValue(-1L)
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(30))
+                .issuedQuantity(100)
+                .appliesToType(CouponTargetType.PRODUCT.name())
+                .appliesToId(1L)
+                .requiresConcurrencyControl(true)
+                .targetImgUrl("https://image.url/target.jpg")
+                .build();
 
         // When // Then
         mockMvc
@@ -112,11 +156,201 @@ public class CouponApiControllerTest extends ControllerTestSupport {
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andDo(print())
-                .andExpect(status().isBadRequest());
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.message").value("Invalid request"))
-//                .andExpect(jsonPath("$.validation.startAt").value("startAt can not be null"));
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string("Fixed amount discount value must be non-negative."));
     }
 
 
+    @DisplayName("[관리자] 쿠폰 생성 - PERCENTAGE의 discountValue가 0 ~ 100 범위를 넘어감")
+    @Test
+    void createCouponInfoWithPercentageDiscountValueTooHigh() throws Exception {
+        // Given
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("Winter Sale")
+                .discountType(DiscountType.PERCENTAGE.name())
+                .discountValue(150L) // Percentage over 100
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(30))
+                .issuedQuantity(100)
+                .appliesToType(CouponTargetType.PRODUCT.name())
+                .appliesToId(1L)
+                .requiresConcurrencyControl(true)
+                .targetImgUrl("https://image.url/special.jpg")
+                .build();
+
+        // When // Then
+        mockMvc
+                .perform(
+                        post("/coupons")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string("Percentage discount value must be between 0 and 100."));
+    }
+
+
+    @DisplayName("[관리자] 쿠폰정보 수정 - 유효한 요청")
+    @Test
+    void modifyCouponInfoWithValidRequest() throws Exception {
+        // Given
+        Long couponIdToBeUpdated = 3L;
+        CouponModifyRequest request = CouponModifyRequest.builder()
+                .name("Updated Name")
+                .discountType("PERCENTAGE")
+                .discountValue(15L) // Updated discount rate within valid range
+                .startAt(LocalDateTime.now().minusDays(10))
+                .endAt(LocalDateTime.now().plusDays(20))
+                .issuedQuantity(500) // Updated issued quantity
+                .requiresConcurrencyControl(false)
+                .targetImgUrl("https://image.url/updated.jpg")
+                .build();
+
+        assertNull(request.getInvalidDiscountMessage(), "Discount information is not valid");
+        assertTrue(request.isValidDateRange(), "Date range is not valid");
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // Stubbing CouponService to return the expected ID on modification // 넣은값이 그대로 나올 수 있도록.
+        // 이 설정을 안해주면 mockbean은 무조건 0을 뱉는다.
+        when(couponService.modifyCouponInfo(any(CouponModifyRequest.class), eq(couponIdToBeUpdated)))
+                .thenReturn(couponIdToBeUpdated);
+
+        // When // Then
+        mockMvc.perform(
+                        patch("/coupons/{id}", couponIdToBeUpdated)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJson)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(couponIdToBeUpdated));
+    }
+
+    @Test
+    @DisplayName("[관리자] 쿠폰정보 수정 - 시작일 없는 요청: not null 대표")
+    void modifyCouponInfoWithNullStartAt() throws Exception {
+        // Given
+        Long couponIdToBeUpdated = 3L;
+        CouponModifyRequest request = CouponModifyRequest.builder()
+                .name("Updated Name")
+                .discountType(DiscountType.PERCENTAGE.name())
+                .discountValue(15L)
+                .startAt(null)
+                .endAt(LocalDateTime.now().plusDays(20))
+                .issuedQuantity(500)
+                .requiresConcurrencyControl(false)
+                .targetImgUrl("https://image.url/updated.jpg")
+                .build();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When // Then
+        mockMvc.perform(
+                        patch("/coupons/{id}", couponIdToBeUpdated)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJson)
+                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0]").value("startAt: must not be null"));
+    }
+
+    @Test
+    @DisplayName("[관리자] 쿠폰정보 수정 - startAt이 endAt보다 늦은 요청")
+    void modifyCouponInfoWithInvalidDateRange() throws Exception {
+        // Given
+        Long couponIdToBeUpdated = 4L;
+        CouponModifyRequest request = CouponModifyRequest.builder()
+                .name("Winter Sale")
+                .discountType(DiscountType.FIXED_AMOUNT.name())
+                .discountValue(1000L)
+                .startAt(LocalDateTime.now().plusDays(10))
+                .endAt(LocalDateTime.now().plusDays(5))
+                .issuedQuantity(50)
+                .requiresConcurrencyControl(false)
+                .targetImgUrl("https://image.url/winter.jpg")
+                .build();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When // Then
+        mockMvc.perform(
+                        patch("/coupons/{id}", couponIdToBeUpdated)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJson)
+                )
+                .andDo(print())
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string("The start date must be before the end date"));
+    }
+
+    @Test
+    @DisplayName("[관리자] 쿠폰정보 수정 - FIXED_AMOUNT의 discountValue가 음수")
+    void modifyCouponInfoWithFixedAmountDiscountValueNegative() throws Exception {
+        // Given
+        Long couponIdToBeUpdated = 4L;
+        CouponModifyRequest request = CouponModifyRequest.builder()
+                .name("Winter Sale")
+                .discountType(DiscountType.FIXED_AMOUNT.name())
+                .discountValue(-500L) // Negative amount
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(30))
+                .issuedQuantity(50)
+                .requiresConcurrencyControl(false)
+                .targetImgUrl("https://image.url/winter.jpg")
+                .build();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When // Then
+        mockMvc.perform(
+                        patch("/coupons/{id}", couponIdToBeUpdated)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJson)
+                )
+                .andDo(print())
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string("Fixed amount discount value must be non-negative."));
+    }
+
+    @Test
+    @DisplayName("[관리자] 쿠폰정보 수정 - PERCENTAGE의 discountValue가 0 ~ 100 범위를 넘어감")
+    void modifyCouponInfoWithPercentageDiscountValueOutOfRange() throws Exception {
+        // Given
+        Long couponIdToBeUpdated = 4L;
+        CouponModifyRequest request = CouponModifyRequest.builder()
+                .name("Winter Sale")
+                .discountType(DiscountType.PERCENTAGE.name())
+                .discountValue(150L) // Percentage over 100
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(30))
+                .issuedQuantity(50)
+                .requiresConcurrencyControl(false)
+                .targetImgUrl("https://image.url/winter.jpg")
+                .build();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When // Then
+        mockMvc.perform(
+                        patch("/coupons/{id}", couponIdToBeUpdated)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJson)
+                )
+                .andDo(print())
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string("Percentage discount value must be between 0 and 100."));
+    }
 }

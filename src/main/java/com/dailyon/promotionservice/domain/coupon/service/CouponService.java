@@ -5,7 +5,7 @@ import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateReques
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
-import com.dailyon.promotionservice.domain.coupon.entity.CouponType;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
@@ -29,7 +29,7 @@ public class CouponService {
     @Transactional
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
         CouponInfo couponInfo = couponInfoRepository.save(request.toEntity());
-        CouponType appliesToType = CouponType.fromString(request.getAppliesToType());
+        CouponTargetType appliesToType = CouponTargetType.fromString(request.getAppliesToType());
         
         CouponAppliesTo appliesTo = CouponAppliesTo.createWithCouponInfo(
                 couponInfo,
@@ -45,7 +45,6 @@ public class CouponService {
         CouponInfo couponInfo = couponInfoRepository.findById(couponInfoId)
                 .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found for id: " + couponInfoId));
         couponInfo.updateDetails(request);
-        couponInfoRepository.save(couponInfo);
 
         return couponInfo.getId();
     }
