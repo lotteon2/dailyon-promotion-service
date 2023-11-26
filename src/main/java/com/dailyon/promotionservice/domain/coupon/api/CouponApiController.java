@@ -47,4 +47,12 @@ public class CouponApiController {
 
         return ResponseEntity.ok(updatedCouponId);
     }
+
+    @DeleteMapping("/{couponInfoId}")
+    public ResponseEntity<Void> deleteCouponInfoWithAppliesTo(@PathVariable Long couponInfoId) {
+        couponService.deleteCouponInfoWithAppliesTo(couponInfoId);
+        return ResponseEntity.noContent().build();
+    }
+
+
 }
