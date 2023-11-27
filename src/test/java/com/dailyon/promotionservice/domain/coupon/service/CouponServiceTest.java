@@ -12,12 +12,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.dailyon.promotionservice.domain.coupon.entity.DiscountType.fromString;
@@ -27,9 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
 
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 @Transactional
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class CouponServiceTest {
     @Autowired EntityManager em;
@@ -38,11 +43,14 @@ public class CouponServiceTest {
     @Autowired CouponAppliesToRepository couponAppliesToRepository;
     @Autowired MemberCouponRepository memberCouponRepository;
 
+
 //    @Autowired RedisTemplate<String, String> redisTemplate;
     @Autowired ObjectMapper objectMapper;
 
     @AfterEach
     void tearDown() {
+
+        System.out.println("@@@@@@@@@@@@@@@ROLLBACK@@@@@@@@@@@@@@@");
         couponAppliesToRepository.deleteAllInBatch();
         couponInfoRepository.deleteAllInBatch();
         memberCouponRepository.deleteAllInBatch();
@@ -173,16 +181,12 @@ public class CouponServiceTest {
 
         // when
         couponService.deleteCouponInfoWithAppliesTo(couponInfoId);
-//        em.flush();
-//        em.clear();
+        em.flush();
+        em.clear();
 
         // then
         assertThat(couponInfoRepository.findById(couponInfoId)).isEmpty();
-
-        System.out.println("!!!!!!!!!!!!!");
-        System.out.println(couponAppliesToRepository.findById(couponInfoId).toString());
-//        assertThat(couponAppliesToRepository.findById(couponInfoId)).isEmpty(); // 얘를 확인해야되는데 왜...
-        // TODO: 위 안되는 상황 해결.
+        assertThat(couponAppliesToRepository.findByCouponInfoId(couponInfoId)).isEmpty(); // 얘를 확인해야되는데 왜...
     }
 
     @Test
@@ -251,18 +255,28 @@ public class CouponServiceTest {
 
     private Long createCouponInfoWithAppliesTo() {
         // 위에 테스트용으로 만든 메소드 사용해서 환경 구축
-        Long couponInfoId = createTestCouponInfo();
+//        Long couponInfoId = createTestCouponInfo();
 
-        CouponInfo testCouponInfo = em.find(CouponInfo.class, couponInfoId);
+        CouponInfo testCouponInfo = CouponInfo.builder()
+                .name("Test Coupon")
+                .discountType(fromString("FIXED_AMOUNT"))
+                .discountValue(1000L)
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(10))
+                .issuedQuantity(1000)
+                .remainingQuantity(1000)
+                .targetImgUrl("https://image.url/test-coupon.jpg")
+                .build();
+
         CouponTargetType appliesToType = CouponTargetType.PRODUCT;
         Long appliesToId = 1L;
 
         CouponAppliesTo testCouponAppliesTo = CouponAppliesTo.createWithCouponInfo(testCouponInfo, appliesToId, appliesToType);
-
-        em.persist(testCouponAppliesTo);
+        couponAppliesToRepository.save(testCouponAppliesTo);
         em.flush();
+        em.clear();
 
-        return couponInfoId;
+        return testCouponInfo.getId();
     }
 
 }
