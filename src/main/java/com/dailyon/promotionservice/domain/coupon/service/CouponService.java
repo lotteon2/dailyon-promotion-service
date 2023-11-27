@@ -30,7 +30,7 @@ public class CouponService {
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
         CouponInfo couponInfo = couponInfoRepository.save(request.toEntity());
         CouponTargetType appliesToType = CouponTargetType.fromString(request.getAppliesToType());
-        
+
         CouponAppliesTo appliesTo = CouponAppliesTo.createWithCouponInfo(
                 couponInfo,
                 request.getAppliesToId(),
@@ -51,13 +51,14 @@ public class CouponService {
 
     @Transactional
     public void deleteCouponInfoWithAppliesTo(Long couponInfoId) {
-        CouponInfo couponInfo = couponInfoRepository.findById(couponInfoId)
-                .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found with id: " + couponInfoId));
+        CouponAppliesTo couponAppliesTo = couponAppliesToRepository.findByCouponInfoId(couponInfoId).orElseThrow(
+                () -> new EntityNotFoundException("CouponInfo not found with id: " + couponInfoId)
+        );
 
         // 연관된 CouponAppliesTo entity는 cascade에 의해 삭제됨.
-        couponInfoRepository.delete(couponInfo);
+        couponAppliesToRepository.delete(couponAppliesTo);
+
     }
-    
 
 
 }
