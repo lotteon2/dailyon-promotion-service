@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class CouponInfo {
+public class CouponInfo implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,8 +49,7 @@ public class CouponInfo {
     // 이벤트페이지 전시용. 없을 수 있음.
     private String targetImgUrl;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "coupon_info_id") // This is where you define the column for the foreign key
+    @OneToOne(mappedBy = "couponInfo",fetch = FetchType.LAZY)
     private CouponAppliesTo appliesTo;
 
 
@@ -79,4 +79,7 @@ public class CouponInfo {
     }
 
 
+    public void remove() {
+        this.appliesTo = null;
+    }
 }

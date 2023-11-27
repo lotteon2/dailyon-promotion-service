@@ -6,12 +6,13 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PACKAGE) // protected 나 package-private 생성자를 사용해 불변성 유지
 @Entity
-public class CouponAppliesTo {
+public class CouponAppliesTo implements Serializable {
     // CouponInfo의 ID를 pk로 사용.
     @Id
     private Long couponInfoId;
@@ -24,8 +25,9 @@ public class CouponAppliesTo {
     private CouponTargetType appliesToType;
 
     // 식별관계. CouponInfo Entity와의 OneToOne 매핑을 명시.
-    @OneToOne(mappedBy = "appliesTo") // "appliesTo"라는 필드 이름으로 명명
-    @MapsId
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // "appliesTo"라는 필드 이름으로 명명
+    @MapsId // , referencedColumnName = "id"
+    @JoinColumn(name = "coupon_info_id")
     private CouponInfo couponInfo;
 
     @Builder
@@ -37,9 +39,9 @@ public class CouponAppliesTo {
     }
 
     public static CouponAppliesTo createWithCouponInfo(CouponInfo couponInfo, Long appliesToId, CouponTargetType appliesToType) {
-        if (couponInfo == null || couponInfo.getId() == null) {
-            throw new IllegalStateException("CouponInfo must be persisted before creating CouponAppliesTo");
-        }
+//        if (couponInfo == null || couponInfo.getId() == null) {
+//            throw new IllegalStateException("CouponInfo must be persisted before creating CouponAppliesTo");
+//        }
 
         return CouponAppliesTo.builder()
                 .couponInfo(couponInfo)
