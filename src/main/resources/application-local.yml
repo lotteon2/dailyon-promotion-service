@@ -48,9 +48,9 @@ eureka:
 logging:
   level:
     org:
-      hibernate:
-        SQL: DEBUG
+#      hibernate:
+#        SQL: DEBUG
       springframework:
         jdbc:
           core:
-            JdbcTemplate: DEBUG
+            JdbcTemplate: TRACE
