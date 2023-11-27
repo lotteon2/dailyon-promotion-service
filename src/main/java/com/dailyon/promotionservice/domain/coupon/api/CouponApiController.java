@@ -56,7 +56,7 @@ public class CouponApiController {
     }
 
 
-    @PatchMapping("/{couponInfoId}/invalidate")
+    @PatchMapping("/{couponInfoId}/invalidate") // 바꾼 리소스의 id값을 반환
     public ResponseEntity<Long> invalidateCoupon(@PathVariable Long couponInfoId) {
         Long invalidatedCouponId = couponService.invalidateCoupon(couponInfoId);
 
