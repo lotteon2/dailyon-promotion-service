@@ -12,12 +12,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import static com.dailyon.promotionservice.domain.coupon.entity.DiscountType.fromString;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,9 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
 
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 @Transactional
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class CouponServiceTest {
     @Autowired EntityManager em;
@@ -37,11 +43,14 @@ public class CouponServiceTest {
     @Autowired CouponAppliesToRepository couponAppliesToRepository;
     @Autowired MemberCouponRepository memberCouponRepository;
 
+
 //    @Autowired RedisTemplate<String, String> redisTemplate;
     @Autowired ObjectMapper objectMapper;
 
     @AfterEach
     void tearDown() {
+
+        System.out.println("@@@@@@@@@@@@@@@ROLLBACK@@@@@@@@@@@@@@@");
         couponAppliesToRepository.deleteAllInBatch();
         couponInfoRepository.deleteAllInBatch();
         memberCouponRepository.deleteAllInBatch();
@@ -164,6 +173,34 @@ public class CouponServiceTest {
                 () -> couponService.modifyCouponInfo(modifyRequest, nonExistentCouponInfoId));
     }
 
+    @Test
+    @DisplayName("[관리자] 쿠폰 삭제 - 유효한 요청. CouponInfo와 1:1 cascade로 연결된 CouponAppliesTo 삭제 확인")
+    void deleteCouponInfoWithAppliesToSuccessfully() {
+        // given
+        Long couponInfoId = createCouponInfoWithAppliesTo();
+
+        // when
+        couponService.deleteCouponInfoWithAppliesTo(couponInfoId);
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(couponInfoRepository.findById(couponInfoId)).isEmpty();
+        assertThat(couponAppliesToRepository.findByCouponInfoId(couponInfoId)).isEmpty(); // 얘를 확인해야되는데 왜...
+    }
+
+    @Test
+    @DisplayName("[관리자] 쿠폰 삭제 - 존재하지 않는 CouponInfo Id로 요청")
+    void deleteNonExistingCouponInfoShouldThrowException() {
+        // given
+        Long nonExistingCouponInfoId = Long.MAX_VALUE; // Some ID that is guaranteed not to exist.
+
+        // when / then
+        assertThatThrownBy(() -> couponService.deleteCouponInfoWithAppliesTo(nonExistingCouponInfoId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("CouponInfo not found with id: " + nonExistingCouponInfoId);
+    }
+
 
 
 
@@ -203,7 +240,7 @@ public class CouponServiceTest {
     }
 
     private CouponModifyRequest createCouponModifyRequestWithInvalidDiscountType() {
-        // CouponModifyRequest with an invalid discountType
+        // 유효하지 않은 discountType을 가진 CouponModifyRequest 객체
         return CouponModifyRequest.builder()
                 .name("Updated Coupon Name")
                 .discountType("INVALID_DISCOUNT_TYPE")
@@ -214,6 +251,32 @@ public class CouponServiceTest {
                 .requiresConcurrencyControl(false)
                 .targetImgUrl("https://image.url/updated-coupon.jpg")
                 .build();
+    }
+
+    private Long createCouponInfoWithAppliesTo() {
+        // 위에 테스트용으로 만든 메소드 사용해서 환경 구축
+//        Long couponInfoId = createTestCouponInfo();
+
+        CouponInfo testCouponInfo = CouponInfo.builder()
+                .name("Test Coupon")
+                .discountType(fromString("FIXED_AMOUNT"))
+                .discountValue(1000L)
+                .startAt(LocalDateTime.now().plusDays(1))
+                .endAt(LocalDateTime.now().plusDays(10))
+                .issuedQuantity(1000)
+                .remainingQuantity(1000)
+                .targetImgUrl("https://image.url/test-coupon.jpg")
+                .build();
+
+        CouponTargetType appliesToType = CouponTargetType.PRODUCT;
+        Long appliesToId = 1L;
+
+        CouponAppliesTo testCouponAppliesTo = CouponAppliesTo.createWithCouponInfo(testCouponInfo, appliesToId, appliesToType);
+        couponAppliesToRepository.save(testCouponAppliesTo);
+        em.flush();
+        em.clear();
+
+        return testCouponInfo.getId();
     }
 
 }

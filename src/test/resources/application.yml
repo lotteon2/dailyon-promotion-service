@@ -4,6 +4,11 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3307/promotion-service
+#    username: root
+#    password: 0000
 
   jpa:
     hibernate:
@@ -12,6 +17,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+#        dialect: org.hibernate.dialect.MySQL8Dialect
 
   data:
     dynamodb:
@@ -29,9 +35,13 @@ spring:
     discovery:
       enabled: false # 테스트 코드 동작시 false로 해야 한다.
 
-logging:
-  level:
-    org:
-      springframework:
-        transaction:
-          interceptor: TRACE
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        SQL: TRACE # or TRACE for even more detailed logs
+#        type:
+#          descriptor.sql: trace
+#      springframework:
+#        transaction:
+#          interceptor: TRACE
