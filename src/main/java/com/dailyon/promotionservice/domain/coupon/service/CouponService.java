@@ -49,10 +49,10 @@ public class CouponService {
         return couponInfo.getId();
     }
 
-    
+    @Transactional
     public void deleteCouponInfoWithAppliesTo(Long couponInfoId) {
-        CouponAppliesTo couponAppliesTo = couponAppliesToRepository.findByCouponInfoId(couponInfoId).orElseThrow(
-                () -> new EntityNotFoundException("CouponInfo not found with id: " + couponInfoId)
+        CouponAppliesTo couponAppliesTo = couponAppliesToRepository.findByCouponInfoId(couponInfoId)
+                .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found with id: " + couponInfoId)
         );
 
         // 연관된 CouponAppliesTo entity는 cascade에 의해 삭제됨.
