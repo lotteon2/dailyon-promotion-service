@@ -26,6 +26,7 @@ import static com.dailyon.promotionservice.domain.coupon.entity.DiscountType.fro
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -202,6 +203,40 @@ public class CouponServiceTest {
     }
 
 
+
+    @Test
+    @DisplayName("[관리자] 쿠폰 발급중단 - 유효한 요청.")
+    void invalidateCouponSuccessfully() {
+        // given
+        Long couponInfoId = createCouponInfoWithAppliesTo();
+
+        // when
+        couponService.invalidateCoupon(couponInfoId);
+        em.flush();
+        em.clear();
+
+        // then
+        Optional<CouponInfo> optionalCouponInfo = couponInfoRepository.findById(couponInfoId);
+
+        assertTrue(optionalCouponInfo.isPresent(), "CouponInfo should be present");
+        CouponInfo couponInfo = optionalCouponInfo.get();
+        Integer remainingQuantity = couponInfo.getRemainingQuantity();
+
+        assertThat(remainingQuantity).isEqualTo(0);
+    }
+
+
+    @Test
+    @DisplayName("[관리자] 쿠폰 발급중단 - 존재하지 않는 CouponInfo Id로 요청")
+    void invalidateNonExistingCouponInfoShouldThrowException() {
+        // given
+        Long nonExistingCouponInfoId = Long.MAX_VALUE;
+
+        // when / then
+        assertThatThrownBy(() -> couponService.invalidateCoupon(nonExistingCouponInfoId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("CouponInfo not found with id: " + nonExistingCouponInfoId);
+    }
 
 
     private Long createTestCouponInfo() {
