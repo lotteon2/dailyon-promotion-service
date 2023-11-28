@@ -78,6 +78,9 @@ public class CouponInfo implements Serializable {
         if (request.getTargetImgUrl() != null) { this.targetImgUrl = request.getTargetImgUrl(); }
     }
 
+    public void invalidateCoupon() {
+        this.remainingQuantity = 0;
+    }
 
     public void remove() {
         this.appliesTo = null;

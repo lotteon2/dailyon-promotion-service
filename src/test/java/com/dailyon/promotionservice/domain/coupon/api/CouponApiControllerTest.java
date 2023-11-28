@@ -386,4 +386,42 @@ public class CouponApiControllerTest extends ControllerTestSupport {
 
         verify(couponService, times(1)).deleteCouponInfoWithAppliesTo(couponInfoId);
     }
+
+    @DisplayName("[관리자] 쿠폰 발급중지 - 유효한 요청/ 존재하는 쿠폰")
+    @Test
+    void invalidateCouponInfoWithExistingCoupon() throws Exception {
+        // Given
+        Long couponInfoId = 1L; // 존재한다고 가정
+
+        // Stubbing CouponService to return the expected ID on modification // 넣은값이 그대로 나올 수 있도록.
+        // 이 설정을 안해주면 mockbean은 무조건 0을 뱉는다.
+        when(couponService.invalidateCoupon(eq(couponInfoId)))
+                .thenReturn(couponInfoId);
+
+        // When // Then
+        mockMvc
+                .perform(patch("/coupons/{couponInfoId}/invalidate", couponInfoId))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(couponInfoId));
+
+        verify(couponService, times(1)).invalidateCoupon(couponInfoId);
+    }
+
+    @DisplayName("[관리자] 쿠폰 발급중지 - 존재하지 않는 쿠폰")
+    @Test
+    void invalidateCouponInfoWithNonExistingCoupon() throws Exception {
+        // Given
+        Long couponInfoId = 999L; // 존재하지 않는다고 가정
+        doThrow(new EntityNotFoundException("Coupon not found")).when(couponService).invalidateCoupon(anyLong());
+
+        // When // Then
+        mockMvc
+                .perform(patch("/coupons/{couponInfoId}/invalidate", couponInfoId))
+                .andDo(print())
+                .andExpect(status().isNotFound()); // Expect 404 Not Found for a missing coupon
+
+        verify(couponService, times(1)).invalidateCoupon(couponInfoId);
+    }
 }

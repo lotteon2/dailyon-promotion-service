@@ -48,10 +48,19 @@ public class CouponApiController {
         return ResponseEntity.ok(updatedCouponId);
     }
 
+
     @DeleteMapping("/{couponInfoId}")
     public ResponseEntity<Void> deleteCouponInfoWithAppliesTo(@PathVariable Long couponInfoId) {
         couponService.deleteCouponInfoWithAppliesTo(couponInfoId);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @PatchMapping("/{couponInfoId}/invalidate") // 바꾼 리소스의 id값을 반환
+    public ResponseEntity<Long> invalidateCoupon(@PathVariable Long couponInfoId) {
+        Long invalidatedCouponId = couponService.invalidateCoupon(couponInfoId);
+
+        return ResponseEntity.ok(invalidatedCouponId);
     }
 
 
