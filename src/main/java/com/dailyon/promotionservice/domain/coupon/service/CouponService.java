@@ -3,6 +3,7 @@ package com.dailyon.promotionservice.domain.coupon.service;
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
@@ -15,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -69,6 +73,18 @@ public class CouponService {
         couponInfo.invalidateCoupon();
 
         return couponInfoId;
+    }
+
+    public List<CouponExistenceResponse> checkCouponsExistenceByProductIds(List<Long> productIds) {
+        Set<Long> productIdsWithCoupons = couponInfoRepository.findProductIdsWithCoupons(productIds);
+
+        return productIds.stream()
+                .map(productId ->
+                        CouponExistenceResponse.builder()
+                                .productId(productId)
+                                .hasCoupons(productIdsWithCoupons.contains(productId))
+                                .build())
+                .collect(Collectors.toList());
     }
 
 
