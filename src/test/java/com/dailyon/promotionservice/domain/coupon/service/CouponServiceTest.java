@@ -8,6 +8,7 @@ import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,17 +20,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.dailyon.promotionservice.domain.coupon.entity.DiscountType.fromString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -39,11 +39,16 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest
 public class CouponServiceTest {
     @Autowired EntityManager em;
+
     @Autowired CouponService couponService;
+
     @Autowired CouponInfoRepository couponInfoRepository;
     @Autowired CouponAppliesToRepository couponAppliesToRepository;
     @Autowired MemberCouponRepository memberCouponRepository;
 
+//    @MockBean CouponInfoRepository couponInfoRepository;
+//    @MockBean CouponAppliesToRepository couponAppliesToRepository;
+//    @MockBean MemberCouponRepository memberCouponRepository;
 
 //    @Autowired RedisTemplate<String, String> redisTemplate;
     @Autowired ObjectMapper objectMapper;
@@ -239,6 +244,33 @@ public class CouponServiceTest {
     }
 
 
+//    @Test
+//    @DisplayName("Product IDs 기준으로 현재시각 기준 발급가능 쿠폰 존재 확인")
+//    void checkCouponsExistenceByProductIds() {
+//        // given
+//        List<Long> productIds = Arrays.asList(1L, 2L, 3L, 4L);
+//        Set<Long> productIdsWithCoupons = new HashSet<>(Arrays.asList(2L, 4L));
+//
+////        CouponInfoRepository couponInfoRepository = mock(CouponInfoRepository.class); // repository 부를때 mocking 객체
+//
+////        when(couponInfoRepository.findProductIdsWithCoupons(productIds)).thenReturn(productIdsWithCoupons);
+//
+//        // when
+//        List<CouponExistenceResponse> existenceResponses = couponService.checkCouponsExistenceByProductIds(productIds);
+//
+//        // then
+//        assertNotNull(existenceResponses);
+//        assertEquals(productIds.size(), existenceResponses.size());
+//        assertThat(existenceResponses).extracting("productId")
+//                .containsExactlyInAnyOrderElementsOf(productIds);
+//        assertThat(existenceResponses).extracting("hasCoupons")
+//                .containsExactly(false, true, false, true);
+//
+//        // Verify that the repository method was called correctly
+//        verify(couponInfoRepository).findProductIdsWithCoupons(productIds);
+//    }
+
+
     private Long createTestCouponInfo() {
         // 실제 테스트 데이터로 'CouponInfo' 인스턴스 생성
         CouponInfo testCouponInfo = CouponInfo.builder()
@@ -313,5 +345,7 @@ public class CouponServiceTest {
 
         return testCouponInfo.getId();
     }
+
+
 
 }
