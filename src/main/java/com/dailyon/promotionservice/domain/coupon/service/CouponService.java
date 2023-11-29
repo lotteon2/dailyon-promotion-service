@@ -10,6 +10,7 @@ import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -85,6 +86,19 @@ public class CouponService {
                                 .hasCoupons(productIdsWithCoupons.contains(productId))
                                 .build())
                 .collect(Collectors.toList());
+    }
+
+    public List<CouponInfoItemResponse> getActiveCouponsForProductAndCategory(long productId, long categoryId) {
+        List<CouponInfo> coupons = couponInfoRepository.findActiveCouponsForProductAndCategory(productId, categoryId);
+
+        return coupons.stream().map(couponInfo -> CouponInfoItemResponse.builder()
+                .appliesToType(couponInfo.getAppliesTo().getAppliesToType())
+                .appliedToId(couponInfo.getAppliesTo().getAppliesToId())
+                .discountType(couponInfo.getDiscountType())
+                .discountValue(couponInfo.getDiscountValue())
+                .endAt(couponInfo.getEndAt())
+                .build()
+        ).collect(Collectors.toList());
     }
 
 

@@ -6,6 +6,7 @@ import com.dailyon.promotionservice.domain.coupon.service.response.CouponExisten
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,13 @@ public class CouponApiController {
     public ResponseEntity<List<CouponExistenceResponse>> checkCouponsExistenceByProductIds(@RequestParam List<Long> productIds) {
         List<CouponExistenceResponse> couponExistenceList = couponService.checkCouponsExistenceByProductIds(productIds);
         return ResponseEntity.ok(couponExistenceList);
+    }
+
+    @GetMapping("/single-product")
+    public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {
+        List<CouponInfoItemResponse> couponExistenceList = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
+        return ResponseEntity.ok(couponExistenceList);
+
 
     }
 
