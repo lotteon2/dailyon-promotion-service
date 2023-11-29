@@ -502,4 +502,37 @@ public class CouponApiControllerTest extends ControllerTestSupport {
         // bad request로 service method 호출 안됨을 검증.
         verify(couponService, never()).getActiveCouponsForProductAndCategory(anyLong(), anyLong());
     }
+
+    @Test
+    @DisplayName("조회: 카테고리에 적용되는 쿠폰 - 유효한 요청")
+    void whenGetCategoryCouponWithValidRequest_thenReturnsListOfCoupons() throws Exception {
+        // Given
+        long categoryId = 1L;
+        List<CouponInfoItemResponse> mockResponse = Arrays.asList(
+                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
+                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
+        );
+        when(couponService.getActiveCouponsForCategory(categoryId)).thenReturn(mockResponse);
+
+        // When // Then
+        mockMvc.perform(get("/coupons")
+                        .param("categoryId", String.valueOf(categoryId)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(mockResponse.size())));
+
+        // Verify that our service method was called once
+        verify(couponService, times(1)).getActiveCouponsForCategory(categoryId);
+    }
+
+    @Test
+    @DisplayName("조회: 카테고리에 적용되는 쿠폰 - 파라미터 누락")
+    void whenGetCategoryCouponWithoutParameters_thenBadRequest() throws Exception {
+        // When // Then
+        mockMvc.perform(get("/coupons"))
+                .andExpect(status().isBadRequest());
+
+        // bad request로 service method 호출 안됨을 검증.
+        verify(couponService, never()).getActiveCouponsForCategory(anyLong());
+    }
 }
