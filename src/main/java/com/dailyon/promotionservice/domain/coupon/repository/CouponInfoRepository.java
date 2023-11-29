@@ -18,4 +18,15 @@ public interface CouponInfoRepository extends JpaRepository<CouponInfo, Long> {
             "AND cat.appliesToType = 'PRODUCT' " +
             "AND CURRENT_TIMESTAMP BETWEEN cat.couponInfo.startAt AND cat.couponInfo.endAt")
     Set<Long> findProductIdsWithCoupons(@Param("productIds") List<Long> productIds);
+
+
+    @Query("SELECT ci FROM CouponInfo ci " +
+            "WHERE " +
+            "((ci.appliesTo.appliesToId = :productId AND ci.appliesTo.appliesToType = 'PRODUCT') OR " +
+            "(ci.appliesTo.appliesToId = :categoryId AND ci.appliesTo.appliesToType = 'CATEGORY'))" +
+            " AND " +
+            "CURRENT_TIMESTAMP BETWEEN ci.startAt AND ci.endAt " +
+            "AND ci.remainingQuantity > 0")
+    List<CouponInfo> findActiveCouponsForProductAndCategory(@Param("productId") long productId,
+                                                            @Param("categoryId") long categoryId);
 }
