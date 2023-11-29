@@ -72,12 +72,16 @@ public class CouponApiController {
         return ResponseEntity.ok(couponExistenceList);
     }
 
-    @GetMapping("/single-product")
+    @GetMapping(value = "/single-product", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
     public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {
         List<CouponInfoItemResponse> couponExistenceList = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
         return ResponseEntity.ok(couponExistenceList);
+    }
 
-
+    @GetMapping(params = "categoryId")
+    public ResponseEntity<List<CouponInfoItemResponse>> getCategoryCoupon(@RequestParam long categoryId) {
+        List<CouponInfoItemResponse> couponExistenceList = couponService.getActiveCouponsForCategory(categoryId);
+        return ResponseEntity.ok(couponExistenceList);
     }
 
 

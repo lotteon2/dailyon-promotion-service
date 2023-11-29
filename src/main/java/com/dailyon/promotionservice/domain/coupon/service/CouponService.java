@@ -101,5 +101,18 @@ public class CouponService {
         ).collect(Collectors.toList());
     }
 
+    public List<CouponInfoItemResponse> getActiveCouponsForCategory(Long categoryId) {
+        List<CouponInfo> activeCoupons = couponInfoRepository.findActiveCouponsForCategory(categoryId);
+        return activeCoupons.stream()
+                .map(couponInfo -> CouponInfoItemResponse.builder()
+                        .appliesToType(CouponTargetType.CATEGORY)
+                        .appliedToId(couponInfo.getAppliesTo().getAppliesToId())
+                        .discountType(couponInfo.getDiscountType())
+                        .discountValue(couponInfo.getDiscountValue())
+                        .endAt(couponInfo.getEndAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 
 }
