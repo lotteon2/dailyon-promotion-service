@@ -5,6 +5,7 @@ import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyReques
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
+import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
@@ -276,10 +277,13 @@ public class CouponServiceTest {
     void searchCouponsOnSingleProductByProductIdAndCategoryId() {
         Long productId = 1L;
         Long categoryId = 1L;
+        List<CouponInfoItemResponse> expectedCoupons = List.of(
+                new CouponInfoItemResponse(CouponTargetType.PRODUCT, 1L, DiscountType.PERCENTAGE, 20L, LocalDateTime.parse("2023-12-04T16:53:35.066194")),
+                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.parse("2023-12-04T16:53:35.066194"))
+        );
+
         List<CouponInfoItemResponse> activeCoupons = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
-        System.out.println(activeCoupons);
-
-
+        assertEquals(expectedCoupons.size(), activeCoupons.size(), "The list of active coupons does not match the expected size");
     }
 
 
