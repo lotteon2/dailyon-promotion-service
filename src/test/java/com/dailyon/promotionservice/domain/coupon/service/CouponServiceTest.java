@@ -9,8 +9,10 @@ import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepo
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +54,12 @@ public class CouponServiceTest {
 
 //    @Autowired RedisTemplate<String, String> redisTemplate;
     @Autowired ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        testCouponInfoDataSetup();
+
+    }
 
     @AfterEach
     void tearDown() {
@@ -244,31 +252,36 @@ public class CouponServiceTest {
     }
 
 
-//    @Test
-//    @DisplayName("Product IDs 기준으로 현재시각 기준 발급가능 쿠폰 존재 확인")
-//    void checkCouponsExistenceByProductIds() {
-//        // given
-//        List<Long> productIds = Arrays.asList(1L, 2L, 3L, 4L);
-//        Set<Long> productIdsWithCoupons = new HashSet<>(Arrays.asList(2L, 4L));
-//
-////        CouponInfoRepository couponInfoRepository = mock(CouponInfoRepository.class); // repository 부를때 mocking 객체
-//
-////        when(couponInfoRepository.findProductIdsWithCoupons(productIds)).thenReturn(productIdsWithCoupons);
-//
-//        // when
-//        List<CouponExistenceResponse> existenceResponses = couponService.checkCouponsExistenceByProductIds(productIds);
-//
-//        // then
-//        assertNotNull(existenceResponses);
-//        assertEquals(productIds.size(), existenceResponses.size());
-//        assertThat(existenceResponses).extracting("productId")
-//                .containsExactlyInAnyOrderElementsOf(productIds);
-//        assertThat(existenceResponses).extracting("hasCoupons")
-//                .containsExactly(false, true, false, true);
-//
-//        // Verify that the repository method was called correctly
-//        verify(couponInfoRepository).findProductIdsWithCoupons(productIds);
-//    }
+    @Test
+    @DisplayName("Product IDs 기준으로 현재시각 기준 발급가능 쿠폰 존재 확인")
+    void checkCouponsExistenceByProductIds() {
+        // given
+        List<Long> productIds = Arrays.asList(1L, 2L, 3L, 4L);
+        Set<Long> productIdsWithCoupons = new HashSet<>(Arrays.asList(1L, 2L));
+
+        // when
+        List<CouponExistenceResponse> existenceResponses = couponService.checkCouponsExistenceByProductIds(productIds);
+
+        // then
+        assertNotNull(existenceResponses);
+        assertEquals(productIds.size(), existenceResponses.size());
+        assertThat(existenceResponses).extracting("productId")
+                .containsExactlyInAnyOrderElementsOf(productIds);
+        assertThat(existenceResponses).extracting("hasCoupons")
+                .containsExactly(true, true, false, false);
+    }
+
+    @Test
+    @DisplayName("단일 상품에 적용되는 쿠폰 조회 productId and categoryId - 유효한 요청")
+    void searchCouponsOnSingleProductByProductIdAndCategoryId() {
+        Long productId = 1L;
+        Long categoryId = 1L;
+        List<CouponInfoItemResponse> activeCoupons = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
+        System.out.println(activeCoupons);
+
+
+    }
+
 
 
     private Long createTestCouponInfo() {
@@ -344,6 +357,72 @@ public class CouponServiceTest {
         em.clear();
 
         return testCouponInfo.getId();
+    }
+
+    private void testCouponInfoDataSetup() {
+            // PRODUCT1, PERCENTAGE
+            CouponCreateRequest create_request1 = new CouponCreateRequest(
+                    "PERCENTAGE_PRODUCT_SALE",
+                    "PERCENTAGE",
+                    20L,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(5),
+                    1000,
+                    "PRODUCT",
+                    1L, // product ID 임의로 넣음.
+                    true,
+                    "https://image.url/summer-sale.jpg"
+            );
+
+        // PRODUCT2, FIXED_AMOUNT
+            CouponCreateRequest create_request2 = new CouponCreateRequest(
+                    "FIXED_AMOUNT_PRODUCT_SALE",
+                    "FIXED_AMOUNT",
+                    5000L,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(5),
+                    1000,
+                    "PRODUCT",
+                    2L, // product ID 임의로 넣음.
+                    true,
+                    "https://image.url/summer-sale.jpg"
+            );
+
+        // CATEGORY1, PERCENTAGE
+            CouponCreateRequest create_request3 = new CouponCreateRequest(
+                    "PERCENTAGE_CATEGORY_SALE",
+                    "PERCENTAGE", // discountRate
+                    10L,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(5),
+                    1000,
+                    "CATEGORY",
+                    1L, // product ID 임의로 넣음.
+                    true,
+                    "https://image.url/summer-sale.jpg"
+            );
+
+        // CATEGORY2, FIXED_AMOUNT
+            CouponCreateRequest create_request4 = new CouponCreateRequest(
+                    "FIXED_AMOUNT_CATEGORY_SALE",
+                    "FIXED_AMOUNT", // discountRate
+                    20L,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(5),
+                    1000,
+                    "CATEGORY",
+                    2L, // product ID 임의로 넣음.
+                    true,
+                    "https://image.url/summer-sale.jpg"
+            );
+
+        couponService.createCouponInfoWithAppliesTo(create_request1);
+        couponService.createCouponInfoWithAppliesTo(create_request2);
+        couponService.createCouponInfoWithAppliesTo(create_request3);
+        couponService.createCouponInfoWithAppliesTo(create_request4);
+
+        em.flush();
+        em.clear();
     }
 
 
