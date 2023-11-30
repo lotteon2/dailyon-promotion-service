@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
@@ -76,6 +77,14 @@ public class CouponApiController {
     public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {
         List<CouponInfoItemResponse> couponExistenceList = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
         return ResponseEntity.ok(couponExistenceList);
+    }
+
+    @PostMapping(value = "/multiple-products")
+    public ResponseEntity<MultipleProductCouponsResponse> getMultipleProductsCoupons(
+            @RequestBody MultipleProductsCouponRequest request) {
+
+        MultipleProductCouponsResponse couponsMap = couponService.getActiveCouponsForMultipleProductsAndCategories(request);
+        return ResponseEntity.ok(couponsMap);
     }
 
     @GetMapping(params = "categoryId")
