@@ -88,6 +88,40 @@ public class CouponService {
                 .collect(Collectors.toList());
     }
 
+    public MultipleProductCouponsResponse getActiveCouponsForMultipleProductsAndCategories(MultipleProductsCouponRequest request) {
+        // 상품 ID와 카테고리 ID 목록 추출
+        List<Long> productIds = request.getProducts().stream()
+                .map(MultipleProductsCouponRequest.ProductCategoryPair::getProductId)
+                .collect(Collectors.toList());
+        Set<Long> categoryIds = request.getProducts().stream()
+                .map(MultipleProductsCouponRequest.ProductCategoryPair::getCategoryId)
+                .collect(Collectors.toSet());
+
+        List<CouponInfo> coupons = couponInfoRepository.findActiveCouponsForProductsAndCategories(productIds, new ArrayList<>(categoryIds));
+
+        // 상품 ID를 키로 하고, 쿠폰 리스트를 값으로 갖는 맵을 초기화
+        Map<Long, List<CouponInfoItemResponse>> productCouponsMap = productIds.stream()
+                .collect(Collectors.toMap(Function.identity(), id -> new ArrayList<>()));
+
+        for (MultipleProductsCouponRequest.ProductCategoryPair productCategoryPair : request.getProducts()) {
+            Long productId = productCategoryPair.getProductId();
+            Long categoryId = productCategoryPair.getCategoryId();
+
+            for (CouponInfo couponInfo : coupons) {
+                CouponAppliesTo couponAppliesTo = couponInfo.getAppliesTo();
+
+                if ( couponAppliesTo.getAppliesToType() == CouponTargetType.PRODUCT &&
+                        couponAppliesTo.getAppliesToId().equals(productId)) {
+                    productCouponsMap.get(productId).add(CouponInfoItemResponse.from(couponInfo));
+                } else if ( couponAppliesTo.getAppliesToType() == CouponTargetType.CATEGORY &&
+                        couponAppliesTo.getAppliesToId().equals(categoryId)) {
+                    productCouponsMap.get(productId).add(CouponInfoItemResponse.from(couponInfo));
+                }
+            }
+        }
+        return new MultipleProductCouponsResponse(productCouponsMap);
+    }
+
     public List<CouponInfoItemResponse> getActiveCouponsForProductAndCategory(long productId, long categoryId) {
         List<CouponInfo> coupons = couponInfoRepository.findActiveCouponsForProductAndCategory(productId, categoryId);
 
