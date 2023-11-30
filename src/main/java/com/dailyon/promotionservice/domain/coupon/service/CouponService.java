@@ -1,9 +1,11 @@
 package com.dailyon.promotionservice.domain.coupon.service;
 
 
+import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
+import com.dailyon.promotionservice.domain.coupon.entity.MemberCoupon;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -149,6 +152,53 @@ public class CouponService {
                         .endAt(couponInfo.getEndAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    // TODO: 동시성 이슈 처리
+    @Transactional
+    public void downloadCoupon(Long memberId, Long couponId) {
+        CouponInfo couponInfo = couponInfoRepository.findById(couponId)
+                .orElseThrow(() -> new EntityNotFoundException("Coupon not found"));
+
+        couponInfo.decreaseRemainingQuantity();
+        couponInfoRepository.save(couponInfo);
+
+        MemberCoupon memberCoupon = MemberCoupon.builder()
+                .memberId(memberId)
+                .couponInfoId(couponInfo.getId())
+                .createdAt(LocalDateTime.now())
+                .isUsed(false)
+                .build();
+        memberCouponRepository.save(memberCoupon);
+    }
+
+    @Transactional
+    public void useCoupon(Long memberId, Long couponId) {
+        MemberCoupon.MemberCouponId memberCouponId = MemberCoupon.MemberCouponId.builder()
+                .memberId(memberId)
+                .couponInfoId(couponId)
+                .build();
+        MemberCoupon memberCoupon = memberCouponRepository.findById(memberCouponId).orElseThrow(() ->
+                new EntityNotFoundException("MemberCoupon not found for memberId " + memberId + " and couponId " + couponId)
+        );
+
+        if (memberCoupon.getIsUsed()) {
+            throw new ErrorResponseException("이미 사용된 쿠폰입니다.");
+        }
+
+        /*
+        임박해서 쓸수도 있으니, 조회는 endAt을 기준으로 하고, 사용은 1시간 더 여유를 둠.
+        조회를 못하는 쿠폰은 클라이언트에서 사용하겠다는 요청을 보낼 수 없으니,
+        주문창에 이미 들어온 임박건을 위한 조건임.
+         */
+        CouponInfo couponInfo = memberCoupon.getCouponInfo();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expirationTimeWithGracePeriod = couponInfo.getEndAt().plusHours(1);
+        if (now.isBefore(couponInfo.getStartAt()) || now.isAfter(expirationTimeWithGracePeriod)) {
+            throw new IllegalStateException("쿠폰의 유효기간이 지났습니다.");
+        }
+
+        memberCoupon.markAsUsed();
     }
 
 
