@@ -8,6 +8,7 @@ import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeExc
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

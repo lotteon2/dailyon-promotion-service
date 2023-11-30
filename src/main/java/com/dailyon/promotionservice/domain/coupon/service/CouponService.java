@@ -3,6 +3,7 @@ package com.dailyon.promotionservice.domain.coupon.service;
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
@@ -11,14 +12,18 @@ import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepo
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
