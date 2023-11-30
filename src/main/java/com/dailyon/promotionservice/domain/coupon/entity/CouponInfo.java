@@ -49,6 +49,14 @@ public class CouponInfo implements Serializable {
     // 이벤트페이지 전시용. 없을 수 있음.
     private String targetImgUrl;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Long minPurchaseAmount = 0L;
+
+    // 없을 수 있음.
+    private Long maxDiscountAmount;
+
+
     @OneToOne(mappedBy = "couponInfo",fetch = FetchType.LAZY)
     private CouponAppliesTo appliesTo;
 

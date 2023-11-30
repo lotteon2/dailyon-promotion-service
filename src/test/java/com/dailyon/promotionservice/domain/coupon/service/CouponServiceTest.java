@@ -89,7 +89,9 @@ public class CouponServiceTest {
                 "PRODUCT",
                 1L, // product ID 임의로 넣음.
                 true,
-                "https://image.url/summer-sale.jpg"
+                "https://image.url/summer-sale.jpg",
+                0L,
+                null
         );
 
         // when
@@ -130,7 +132,9 @@ public class CouponServiceTest {
                 "INVALID_TYPE", // CouponType ENUM에 존재하는 값일것.
                 1L,
                 true,
-                "https://image.url/invalid-type-sale.jpg"
+                "https://image.url/invalid-type-sale.jpg",
+                0L,
+                null
         );
 
         // when // then
@@ -375,7 +379,9 @@ public class CouponServiceTest {
                     "PRODUCT",
                     1L, // product ID 임의로 넣음.
                     true,
-                    "https://image.url/summer-sale.jpg"
+                    "https://image.url/summer-sale.jpg",
+                0L,
+                null
             );
 
         // PRODUCT2, FIXED_AMOUNT
@@ -389,7 +395,9 @@ public class CouponServiceTest {
                     "PRODUCT",
                     2L, // product ID 임의로 넣음.
                     true,
-                    "https://image.url/summer-sale.jpg"
+                    "https://image.url/summer-sale.jpg",
+                0L,
+                null
             );
 
         // CATEGORY1, PERCENTAGE
@@ -403,7 +411,9 @@ public class CouponServiceTest {
                     "CATEGORY",
                     1L, // product ID 임의로 넣음.
                     true,
-                    "https://image.url/summer-sale.jpg"
+                    "https://image.url/summer-sale.jpg",
+                    0L,
+                    null
             );
 
         // CATEGORY2, FIXED_AMOUNT
@@ -417,7 +427,9 @@ public class CouponServiceTest {
                     "CATEGORY",
                     2L, // product ID 임의로 넣음.
                     true,
-                    "https://image.url/summer-sale.jpg"
+                    "https://image.url/summer-sale.jpg",
+                    0L,
+                    null
             );
 
         couponService.createCouponInfoWithAppliesTo(create_request1);
