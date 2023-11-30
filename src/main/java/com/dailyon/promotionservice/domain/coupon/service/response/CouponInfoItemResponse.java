@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice.domain.coupon.service.response;
 
+import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
 import lombok.AllArgsConstructor;
@@ -18,4 +19,14 @@ public class CouponInfoItemResponse {
     private DiscountType discountType;
     private Long discountValue;
     private LocalDateTime endAt;
+
+    public static CouponInfoItemResponse from(CouponInfo couponInfo) {
+        return CouponInfoItemResponse.builder()
+                .appliesToType(couponInfo.getAppliesTo().getAppliesToType())
+                .appliedToId(couponInfo.getAppliesTo().getAppliesToId())
+                .discountType(couponInfo.getDiscountType())
+                .discountValue(couponInfo.getDiscountValue())
+                .endAt(couponInfo.getEndAt())
+                .build();
+    }
 }
