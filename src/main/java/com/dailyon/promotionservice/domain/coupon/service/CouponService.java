@@ -113,13 +113,11 @@ public class CouponService {
             Long categoryId = productCategoryPair.getCategoryId();
 
             for (CouponInfo couponInfo : coupons) {
-                CouponAppliesTo couponAppliesTo = couponInfo.getAppliesTo();
+                Long appliesToId = couponInfo.getAppliesTo().getAppliesToId();
+                CouponTargetType appliesToType = couponInfo.getAppliesTo().getAppliesToType();
 
-                if ( couponAppliesTo.getAppliesToType() == CouponTargetType.PRODUCT &&
-                        couponAppliesTo.getAppliesToId().equals(productId)) {
-                    productCouponsMap.get(productId).add(CouponInfoItemResponse.from(couponInfo));
-                } else if ( couponAppliesTo.getAppliesToType() == CouponTargetType.CATEGORY &&
-                        couponAppliesTo.getAppliesToId().equals(categoryId)) {
+                if (( appliesToType == CouponTargetType.PRODUCT && appliesToId.equals(productId)) ||
+                        ( appliesToType == CouponTargetType.CATEGORY && appliesToId.equals(categoryId))) {
                     productCouponsMap.get(productId).add(CouponInfoItemResponse.from(couponInfo));
                 }
             }
