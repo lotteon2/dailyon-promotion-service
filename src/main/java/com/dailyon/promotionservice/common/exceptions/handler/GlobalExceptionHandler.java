@@ -1,5 +1,6 @@
-package com.dailyon.promotionservice.common.exceptions;
+package com.dailyon.promotionservice.common.exceptions.handler;
 
+import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ErrorResponseException.class)
+    public ResponseEntity<String> handleErrorResponseException(ErrorResponseException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     // 기타, 전역에 해당하는 exception handler들이 아래 붙게 됨.
