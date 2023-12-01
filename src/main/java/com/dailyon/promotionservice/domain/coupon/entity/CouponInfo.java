@@ -96,6 +96,10 @@ public class CouponInfo implements Serializable {
     }
 
     public void decreaseRemainingQuantity() {
+        if (LocalDateTime.now().isAfter(endAt)) {
+            throw new ErrorResponseException("해당 쿠폰 이벤트는 만료된 이벤트입니다.");
+        }
+
         if (remainingQuantity <= 0) {
             throw new ErrorResponseException("해당 쿠폰이 모두 소진되었습니다.");
         }
