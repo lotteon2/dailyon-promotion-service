@@ -5,7 +5,6 @@ import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateReques
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
-import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -451,7 +450,7 @@ public class CouponApiControllerTest extends ControllerTestSupport {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(mockResponse.size()))) // Check the size of the returned list
                 .andExpect(jsonPath("$[0].productId").value(mockResponse.get(0).getProductId()))
-                .andExpect(jsonPath("$[0].hasCoupons").value(mockResponse.get(0).getHasCoupons()));
+                .andExpect(jsonPath("$[0].hasCoupons").value(mockResponse.get(0).getHasAvailableCoupon()));
         // Add other jsonPath assertions as needed to validate each object in the array
 
         verify(couponService, times(1)).checkCouponsExistenceByProductIds(productIds);

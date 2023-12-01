@@ -91,7 +91,7 @@ public class CouponService {
                 .map(productId ->
                         CouponExistenceResponse.builder()
                                 .productId(productId)
-                                .hasCoupons(productIdsWithCoupons.contains(productId))
+                                .hasAvailableCoupon(productIdsWithCoupons.contains(productId))
                                 .build())
                 .collect(Collectors.toList());
     }
