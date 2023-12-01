@@ -161,7 +161,6 @@ public class CouponService {
                 .orElseThrow(() -> new EntityNotFoundException("Coupon not found"));
 
         couponInfo.decreaseRemainingQuantity();
-        couponInfoRepository.save(couponInfo);
 
         MemberCoupon memberCoupon = MemberCoupon.builder()
                 .memberId(memberId)
