@@ -9,5 +9,5 @@ import lombok.Data;
 @Data
 public class CouponExistenceResponse {
     private Long productId;
-    private Boolean hasCoupons;
+    private Boolean hasAvailableCoupon;
 }

@@ -94,5 +94,13 @@ public class CouponApiController {
         return ResponseEntity.ok(couponExistenceList);
     }
 
+    // 쿠폰 다운로드
+    @PostMapping("/{coupon_id}/download")
+    public ResponseEntity<?> downloadCoupon(@RequestHeader("memberId") Long memberId,
+                                            @PathVariable("coupon_id") Long couponId) {
+        couponService.downloadCoupon(memberId, couponId);
+        return ResponseEntity.ok("성공적으로 쿠폰을 다운로드 했습니다.");
+    }
+
 
 }

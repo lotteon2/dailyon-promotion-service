@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice.domain.coupon.entity;
 
+import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -93,4 +94,14 @@ public class CouponInfo implements Serializable {
     public void remove() {
         this.appliesTo = null;
     }
+
+    public void decreaseRemainingQuantity() {
+        if (LocalDateTime.now().isAfter(endAt)) {
+            throw new ErrorResponseException("해당 쿠폰 이벤트는 만료된 이벤트입니다.");
+        }
+
+        if (remainingQuantity <= 0) {
+            throw new ErrorResponseException("해당 쿠폰이 모두 소진되었습니다.");
+        }
+        this.remainingQuantity -= 1; }
 }

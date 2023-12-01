@@ -1,10 +1,12 @@
-package com.dailyon.promotionservice.common.exceptions;
+package com.dailyon.promotionservice.common.exceptions.handler;
 
+import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,5 +54,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
+    @ExceptionHandler(ErrorResponseException.class)
+    public ResponseEntity<String> handleErrorResponseException(ErrorResponseException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<String> handleMissingRequestHeader(MissingRequestHeaderException ex) {
+        String errorMessage = "The header '" + ex.getHeaderName() + "' is missing";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+    }
     // 기타, 전역에 해당하는 exception handler들이 아래 붙게 됨.
 }
