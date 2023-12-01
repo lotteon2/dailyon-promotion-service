@@ -450,7 +450,7 @@ public class CouponApiControllerTest extends ControllerTestSupport {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(mockResponse.size()))) // Check the size of the returned list
                 .andExpect(jsonPath("$[0].productId").value(mockResponse.get(0).getProductId()))
-                .andExpect(jsonPath("$[0].hasCoupons").value(mockResponse.get(0).getHasAvailableCoupon()));
+                .andExpect(jsonPath("$[0].hasAvailableCoupon").value(mockResponse.get(0).getHasAvailableCoupon()));
         // Add other jsonPath assertions as needed to validate each object in the array
 
         verify(couponService, times(1)).checkCouponsExistenceByProductIds(productIds);
@@ -533,5 +533,37 @@ public class CouponApiControllerTest extends ControllerTestSupport {
 
         // bad request로 service method 호출 안됨을 검증.
         verify(couponService, never()).getActiveCouponsForCategory(anyLong());
+    }
+
+    @Test
+    @DisplayName("쿠폰 다운로드- 유효한 요청")
+    void whenDownloadCouponWithValidRequest_thenSuccess() throws Exception {
+        // Given
+        Long memberId = 1L;
+        Long couponId = 1L;
+        doNothing().when(couponService).downloadCoupon(memberId, couponId);
+
+        // When // Then
+        mockMvc.perform(post("/coupons/{coupon_id}/download", couponId)
+                        .header("memberId", String.valueOf(memberId)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("성공적으로 쿠폰을 다운로드 했습니다."));
+
+        // 1회 호출 검증
+        verify(couponService).downloadCoupon(memberId, couponId);
+    }
+
+    @Test
+    @DisplayName("쿠폰 다운로드- memberId 헤더 누락")
+    void whenDownloadCouponWithoutMemberId_thenBadRequest() throws Exception {
+        // Given
+        Long couponId = 1L;
+
+        // When // Then
+        mockMvc.perform(post("/coupons/{coupon_id}/download", couponId))
+                .andExpect(status().isBadRequest());
+
+        // 호출 안됨을 검증
+        verify(couponService, never()).downloadCoupon(anyLong(), anyLong());
     }
 }
