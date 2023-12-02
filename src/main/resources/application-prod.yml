@@ -3,6 +3,14 @@ spring:
     activate:
       on-profile: prod
     import: optional:configserver:http://config-service:8888
+
+  # redis setting
+  # TODO: redis settings cipher로 변경
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: 11111111
+
   # rabbitmq settings
   rabbitmq:
     host: rabbitmq-service
