@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -47,11 +48,7 @@ public class CouponServiceTest {
     @Autowired CouponInfoRepository couponInfoRepository;
     @Autowired CouponAppliesToRepository couponAppliesToRepository;
 
-//    @MockBean CouponInfoRepository couponInfoRepository;
-//    @MockBean CouponAppliesToRepository couponAppliesToRepository;
-//    @MockBean MemberCouponRepository memberCouponRepository;
-
-//    @Autowired RedisTemplate<String, String> redisTemplate;
+    @Autowired RedisTemplate<String, String> redisTemplate;
     @Autowired ObjectMapper objectMapper;
 
     @BeforeEach
