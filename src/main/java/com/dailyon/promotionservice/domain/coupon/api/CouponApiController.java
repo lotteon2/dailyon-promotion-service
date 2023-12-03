@@ -68,11 +68,11 @@ public class CouponApiController {
         return ResponseEntity.ok(invalidatedCouponId);
     }
 
-    @GetMapping("/coupons-existence")
-    public ResponseEntity<List<CouponExistenceResponse>> checkCouponsExistenceByProductIds(@RequestParam List<Long> productIds) {
-        List<CouponExistenceResponse> couponExistenceList = couponService.checkCouponsExistenceByProductIds(productIds);
-        return ResponseEntity.ok(couponExistenceList);
-    }
+    // @GetMapping("/coupons-existence")
+    // public ResponseEntity<List<CouponExistenceResponse>> checkCouponsExistenceByProductIds(@RequestParam List<Long> productIds) {
+    //     List<CouponExistenceResponse> couponExistenceList = couponService.checkCouponsExistenceByProductIds(productIds);
+    //     return ResponseEntity.ok(couponExistenceList);
+    // }
 
     @GetMapping(value = "/single-product", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
     public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {
