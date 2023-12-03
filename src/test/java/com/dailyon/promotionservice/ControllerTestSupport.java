@@ -1,6 +1,7 @@
 package com.dailyon.promotionservice;
 
 import com.dailyon.promotionservice.domain.coupon.api.CouponApiController;
+import com.dailyon.promotionservice.domain.coupon.api.CouponFeignController;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import com.dailyon.promotionservice.domain.event.api.EventApiController;
 import com.dailyon.promotionservice.domain.event.service.EventService;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(
         controllers = {
                 CouponApiController.class,
+                CouponFeignController.class,
                 RaffleApiController.class,
                 EventApiController.class
         })
