@@ -4,6 +4,7 @@ package com.dailyon.promotionservice.domain.coupon.service;
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.CouponValidationRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.MemberCoupon;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
@@ -14,6 +15,7 @@ import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepo
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponValidationResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -200,5 +199,43 @@ public class CouponService {
         memberCoupon.markAsUsed();
     }
 
+    public List<CouponValidationResponse> validateCoupons(Long memberId, List<CouponValidationRequest> request) {
+        List<Long> couponInfoIds = new ArrayList<>();
+        for (CouponValidationRequest couponValidationRequest : request) {
+            couponInfoIds.add(couponValidationRequest.getCouponInfoId());
+        }
 
+        // memberId와 couponInfoIds로 쿠폰 정보를 가져옴
+        List<MemberCoupon> memberCoupons = memberCouponRepository.findByMemberIdAndCouponInfoIdIn(memberId, couponInfoIds);
+
+        // unique key(memberId, couponInfoId)들로 가져온 쿠폰들의 개수가 맞지 않으면,
+        // 어떤 특정 couponInfoId와 memberId의 조합이 유효하지 않다는 뜻.
+        if (memberCoupons.size() != request.size()) {
+            throw new ErrorResponseException("유효하지 않은 쿠폰정보를 입력했습니다.");
+        }
+
+        // productId를 key로 관리하기 위한 맵 생성
+        Map<Long, CouponInfo> couponInfoMap = new HashMap<>();
+        for (MemberCoupon memberCoupon : memberCoupons) {
+            CouponInfo couponInfo = memberCoupon.getCouponInfo();
+            couponInfoMap.put(couponInfo.getId(), couponInfo); // couponInfoId를 key로 사용
+        }
+
+        // 요청된 순서대로 결과를 매핑하고 반환
+        List<CouponValidationResponse> responses = new ArrayList<>();
+        for (CouponValidationRequest couponValidationRequest : request) {
+            CouponInfo couponInfo = couponInfoMap.get(couponValidationRequest.getCouponInfoId());
+            if (couponInfo != null) {
+                responses.add(CouponValidationResponse.from(couponValidationRequest.getProductId(), couponInfo));
+            } else {
+                throw new ErrorResponseException("연관된 쿠폰 정보가 존재하지 않습니다.");
+            }
+
+            if (couponInfo.getEndAt().isBefore(LocalDateTime.now().minusHours(1))) {
+                // 사용에 한해서는 1시간의 여유를 더 줌. 조회는 endAt에서 끝.
+                throw new ErrorResponseException("사용 유효기간이 지난 쿠폰입니다.");
+            }
+        }
+        return responses;
+    }
 }
