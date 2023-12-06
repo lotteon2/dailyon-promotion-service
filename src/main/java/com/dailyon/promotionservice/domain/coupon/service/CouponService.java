@@ -199,7 +199,7 @@ public class CouponService {
         memberCoupon.markAsUsed();
     }
 
-    public List<CouponValidationResponse> validateCoupons(Long memberId, List<CouponValidationRequest> request) {
+    public List<CouponValidationResponse> validateCouponsForOrder(Long memberId, List<CouponValidationRequest> request) {
         List<Long> couponInfoIds = new ArrayList<>();
         for (CouponValidationRequest couponValidationRequest : request) {
             couponInfoIds.add(couponValidationRequest.getCouponInfoId());
@@ -233,6 +233,20 @@ public class CouponService {
                 // 사용에 한해서는 1시간의 여유를 더 줌. 조회는 endAt에서 끝.
                 throw new ErrorResponseException("사용 유효기간이 지난 쿠폰입니다.");
             }
+
+            CouponTargetType targetType = couponInfo.getAppliesTo().getAppliesToType();
+            Long targetId = couponInfo.getAppliesTo().getAppliesToId();
+            if ((targetType == CouponTargetType.PRODUCT &&
+                    !targetId.equals(couponValidationRequest.getProductId())) ||
+                (targetType == CouponTargetType.CATEGORY &&
+                    !targetId.equals(couponValidationRequest.getCategoryId()))) {
+
+                String errorMessage = targetType == CouponTargetType.PRODUCT ?
+                        "해당 상품에 적용되지 않는 쿠폰정보입니다." :
+                        "해당 카테고리에 적용되지 않는 쿠폰정보입니다.";
+                throw new ErrorResponseException(errorMessage);
+            }
+
             responses.add(CouponValidationResponse.from(couponValidationRequest.getProductId(), couponInfo));
         }
         return responses;
