@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -27,7 +28,7 @@ public class CouponFeignController {
     @PostMapping("/validate-coupons")
     public ResponseEntity<List<CouponValidationResponse>> validateCoupons(
             @RequestHeader Long memberId,
-            @RequestBody List<CouponValidationRequest> request) {
+            @Valid @RequestBody List<CouponValidationRequest> request) {
 
         List<CouponValidationResponse> validationResponses = couponService.validateCoupons(memberId, request);
         return ResponseEntity.ok(validationResponses);
