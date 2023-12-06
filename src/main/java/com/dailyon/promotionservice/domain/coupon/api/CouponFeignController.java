@@ -25,12 +25,12 @@ public class CouponFeignController {
         return ResponseEntity.ok(couponExistenceList);
     }
 
-    @PostMapping("/validate-coupons")
-    public ResponseEntity<List<CouponValidationResponse>> validateCoupons(
+    @PostMapping("/validate-for-order")
+    public ResponseEntity<List<CouponValidationResponse>> validateCouponsForOrder(
             @RequestHeader Long memberId,
             @Valid @RequestBody List<CouponValidationRequest> request) {
 
-        List<CouponValidationResponse> validationResponses = couponService.validateCoupons(memberId, request);
+        List<CouponValidationResponse> validationResponses = couponService.validateCouponsForOrder(memberId, request);
         return ResponseEntity.ok(validationResponses);
     }
 }
