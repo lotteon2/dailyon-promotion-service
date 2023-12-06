@@ -205,7 +205,7 @@ public class CouponService {
             couponInfoIds.add(couponValidationRequest.getCouponInfoId());
         }
 
-        // memberId와 couponInfoIds로 쿠폰 정보를 가져옴
+        // memberId와 couponInfoIds로 쿠폰 정보를 가져옴 IN연산자라서 내부 최적화로 인해 순서보장안됨.
         List<MemberCoupon> memberCoupons = memberCouponRepository.findByMemberIdAndCouponInfoIdIn(memberId, couponInfoIds);
 
         // unique key(memberId, couponInfoId)들로 가져온 쿠폰들의 개수가 맞지 않으면,
@@ -225,9 +225,7 @@ public class CouponService {
         List<CouponValidationResponse> responses = new ArrayList<>();
         for (CouponValidationRequest couponValidationRequest : request) {
             CouponInfo couponInfo = couponInfoMap.get(couponValidationRequest.getCouponInfoId());
-            if (couponInfo != null) {
-                responses.add(CouponValidationResponse.from(couponValidationRequest.getProductId(), couponInfo));
-            } else {
+            if (couponInfo == null) {
                 throw new ErrorResponseException("연관된 쿠폰 정보가 존재하지 않습니다.");
             }
 
@@ -235,6 +233,7 @@ public class CouponService {
                 // 사용에 한해서는 1시간의 여유를 더 줌. 조회는 endAt에서 끝.
                 throw new ErrorResponseException("사용 유효기간이 지난 쿠폰입니다.");
             }
+            responses.add(CouponValidationResponse.from(couponValidationRequest.getProductId(), couponInfo));
         }
         return responses;
     }
