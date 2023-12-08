@@ -4,11 +4,6 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
-#  datasource:
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://localhost:3307/promotion-service
-#    username: root
-#    password: 0000
 
   # redis setting
   redis:
@@ -24,6 +19,12 @@ spring:
       hibernate:
         format_sql: true
 #        dialect: org.hibernate.dialect.MySQL8Dialect
+    generate-ddl: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: never
 
   data:
     dynamodb:
@@ -41,13 +42,13 @@ spring:
     discovery:
       enabled: false # 테스트 코드 동작시 false로 해야 한다.
 
-#logging:
-#  level:
-#    org:
-#      hibernate:
-#        SQL: TRACE # or TRACE for even more detailed logs
-#        type:
-#          descriptor.sql: trace
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: TRACE # or TRACE for even more detailed logs
+        type:
+          descriptor.sql: trace
 #      springframework:
 #        transaction:
 #          interceptor: TRACE

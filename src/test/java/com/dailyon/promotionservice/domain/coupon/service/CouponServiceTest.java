@@ -32,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -39,6 +40,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Transactional
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
+@ActiveProfiles(value = {"test"})
 public class CouponServiceTest {
     @Autowired EntityManager em;
 
