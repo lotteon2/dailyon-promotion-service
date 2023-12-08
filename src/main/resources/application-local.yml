@@ -47,6 +47,9 @@ spring:
       region: us-west-2  # 지역 설정, 로컬에서 큰 영향을 미치지는 않지만 필요함
       access-key: dummy-access-key  # 액세스 키, 로컬에서는 실제 값 불필요
       secret-key: dummy-secret-key  # 비밀 키, 로컬에서는 실제 값 불필요
+  sql:
+    init:
+      encoding: UTF-8
 
 eureka:
   client:

@@ -1,6 +1,8 @@
 package com.dailyon.promotionservice.domain.coupon.exceptions.handler;
 
+import com.dailyon.promotionservice.domain.coupon.api.CouponAdminController;
 import com.dailyon.promotionservice.domain.coupon.api.CouponApiController;
+import com.dailyon.promotionservice.domain.coupon.api.CouponFeignController;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import org.springframework.core.Ordered;
@@ -11,7 +13,11 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = {CouponApiController.class})
+@RestControllerAdvice(assignableTypes = {
+        CouponApiController.class,
+        CouponFeignController.class,
+        CouponAdminController.class
+})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CouponDomainExceptionHandler {
 
