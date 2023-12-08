@@ -25,49 +25,6 @@ import java.util.List;
 public class CouponApiController {
     private final CouponService couponService;
 
-    @PostMapping("") // 생성 후 생성된 리소스 바로 접근할 수 있게 id값을 반환.
-    public ResponseEntity<Long> createCouponInfoWithAppliesTo(@Valid @RequestBody CouponCreateRequest request) {
-        String invalidDiscountMessage = request.getInvalidDiscountMessage();
-        if (invalidDiscountMessage != null) {
-            throw new InvalidDiscountException(invalidDiscountMessage);
-        }
-        if (!request.isValidDateRange()) {
-            throw new InvalidDateRangeException();
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(couponService.createCouponInfoWithAppliesTo(request));
-    }
-
-    @PatchMapping("/{couponInfoId}") // 바꾼 리소스의 id값을 반환
-    public ResponseEntity<Long> modifyCouponInfo(@PathVariable Long couponInfoId,
-                                                           @Valid @RequestBody CouponModifyRequest request) {
-        String invalidDiscountMessage = request.getInvalidDiscountMessage();
-        if (invalidDiscountMessage != null) {
-            throw new InvalidDiscountException(invalidDiscountMessage);
-        }
-        if (!request.isValidDateRange()) {
-            throw new InvalidDateRangeException();
-        }
-        Long updatedCouponId = couponService.modifyCouponInfo(request, couponInfoId);
-
-        return ResponseEntity.ok(updatedCouponId);
-    }
-
-
-    @DeleteMapping("/{couponInfoId}")
-    public ResponseEntity<Void> deleteCouponInfoWithAppliesTo(@PathVariable Long couponInfoId) {
-        couponService.deleteCouponInfoWithAppliesTo(couponInfoId);
-        return ResponseEntity.noContent().build();
-    }
-
-
-    @PatchMapping("/{couponInfoId}/invalidate") // 바꾼 리소스의 id값을 반환
-    public ResponseEntity<Long> invalidateCoupon(@PathVariable Long couponInfoId) {
-        Long invalidatedCouponId = couponService.invalidateCoupon(couponInfoId);
-
-        return ResponseEntity.ok(invalidatedCouponId);
-    }
-
     // @GetMapping("/coupons-existence")
     // public ResponseEntity<List<CouponExistenceResponse>> checkCouponsExistenceByProductIds(@RequestParam List<Long> productIds) {
     //     List<CouponExistenceResponse> couponExistenceList = couponService.checkCouponsExistenceByProductIds(productIds);
