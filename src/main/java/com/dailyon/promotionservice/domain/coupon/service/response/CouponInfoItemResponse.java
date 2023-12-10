@@ -1,8 +1,8 @@
 package com.dailyon.promotionservice.domain.coupon.service.response;
 
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
-import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
-import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
