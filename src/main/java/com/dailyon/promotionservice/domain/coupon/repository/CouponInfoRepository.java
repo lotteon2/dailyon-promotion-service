@@ -1,8 +1,10 @@
 package com.dailyon.promotionservice.domain.coupon.repository;
 
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
+import com.dailyon.promotionservice.domain.coupon.repository.custom.CouponInfoRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +13,8 @@ import java.util.Set;
 
 
 @Repository
-public interface CouponInfoRepository extends JpaRepository<CouponInfo, Long> {
+public interface CouponInfoRepository extends JpaRepository<CouponInfo, Long>, QuerydslPredicateExecutor<CouponInfo>, CouponInfoRepositoryCustom {
+
 
     @Query("SELECT cat.appliesToId FROM CouponAppliesTo cat " +
             "WHERE cat.appliesToId IN :productIds " +
