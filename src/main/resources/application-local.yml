@@ -68,4 +68,4 @@ logging:
       springframework:
         jdbc:
           core:
-            JdbcTemplate: TRACE
+            JdbcTemplate: DEBUG
