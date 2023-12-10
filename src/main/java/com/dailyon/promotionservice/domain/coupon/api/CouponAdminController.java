@@ -2,11 +2,17 @@ package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoReadPageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +38,13 @@ public class CouponAdminController {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(couponService.createCouponInfoWithAppliesTo(request));
+    }
+
+    @GetMapping("")
+    public ResponseEntity<CouponInfoReadPageResponse> getCouponsPage(@PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        CouponInfoReadPageResponse couponPageResponse = couponService.getCouponsPage(pageable);
+
+        return ResponseEntity.ok(couponPageResponse);
     }
 
     @PatchMapping("/{couponInfoId}") // 바꾼 리소스의 id값을 반환
