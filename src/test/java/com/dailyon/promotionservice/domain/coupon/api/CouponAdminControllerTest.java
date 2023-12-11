@@ -205,6 +205,8 @@ public class CouponAdminControllerTest extends ControllerTestSupport {
                 .endAt(LocalDateTime.now().plusDays(20))
                 .issuedQuantity(500) // Updated issued quantity
                 .requiresConcurrencyControl(false)
+                .appliesToType(CouponTargetType.PRODUCT.toString())
+                .appliesToId(1L)
                 .targetImgUrl("https://image.url/updated.jpg")
                 .build();
 
@@ -243,6 +245,8 @@ public class CouponAdminControllerTest extends ControllerTestSupport {
                 .endAt(LocalDateTime.now().plusDays(20))
                 .issuedQuantity(500)
                 .requiresConcurrencyControl(false)
+                .appliesToType(CouponTargetType.PRODUCT.toString())
+                .appliesToId(1L)
                 .targetImgUrl("https://image.url/updated.jpg")
                 .build();
 
@@ -273,6 +277,8 @@ public class CouponAdminControllerTest extends ControllerTestSupport {
                 .endAt(LocalDateTime.now().plusDays(5))
                 .issuedQuantity(50)
                 .requiresConcurrencyControl(false)
+                .appliesToType(CouponTargetType.PRODUCT.toString())
+                .appliesToId(1L)
                 .targetImgUrl("https://image.url/winter.jpg")
                 .build();
 
@@ -304,6 +310,8 @@ public class CouponAdminControllerTest extends ControllerTestSupport {
                 .endAt(LocalDateTime.now().plusDays(30))
                 .issuedQuantity(50)
                 .requiresConcurrencyControl(false)
+                .appliesToType(CouponTargetType.PRODUCT.toString())
+                .appliesToId(1L)
                 .targetImgUrl("https://image.url/winter.jpg")
                 .build();
 
@@ -335,6 +343,8 @@ public class CouponAdminControllerTest extends ControllerTestSupport {
                 .endAt(LocalDateTime.now().plusDays(30))
                 .issuedQuantity(50)
                 .requiresConcurrencyControl(false)
+                .appliesToType(CouponTargetType.PRODUCT.toString())
+                .appliesToId(1L)
                 .targetImgUrl("https://image.url/winter.jpg")
                 .build();
 
