@@ -1,7 +1,9 @@
 package com.dailyon.promotionservice.domain.coupon.entity;
 
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
+import com.dailyon.promotionservice.domain.common.BaseTimeEntity;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class CouponInfo implements Serializable {
+public class CouponInfo extends BaseTimeEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

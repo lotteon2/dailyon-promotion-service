@@ -1,6 +1,6 @@
 package com.dailyon.promotionservice.domain.coupon.api.request;
 
-import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -25,11 +25,15 @@ public class CouponModifyRequest {
     @NotNull private Integer issuedQuantity;
 
     // 쿠폰정보에 대해서만 수정을 받고 있음.
-//    @NotEmpty private String appliesToType; //coupon 도메인의 entity 패키지에 있는 CouponTargetType ENUM 클래스와 호환
-//    @NotNull private Long appliesToId;
+    @NotEmpty private String appliesToType; //coupon 도메인의 entity 패키지에 있는 CouponTargetType ENUM 클래스와 호환
+    @NotNull private Long appliesToId;
+    private String appliesToName;
 
     @NotNull private Boolean requiresConcurrencyControl;
     private String targetImgUrl;
+
+    private Long minPurchaseAmount; // 안넣으면 builder 통해서 0이 들어감.
+    private Long maxDiscountAmount;
 
     // 할인 유효성에 대한 검증 결과를 String으로 반환. 유효할 경우 null을 반환.
     public String getInvalidDiscountMessage() {

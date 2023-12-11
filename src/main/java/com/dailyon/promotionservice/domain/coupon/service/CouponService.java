@@ -7,18 +7,17 @@ import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyReques
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponValidationRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.MemberCoupon;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.*;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
-import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponValidationResponse;
-import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,17 +45,31 @@ public class CouponService {
         CouponAppliesTo appliesTo = CouponAppliesTo.createWithCouponInfo(
                 couponInfo,
                 request.getAppliesToId(),
-                appliesToType
+                appliesToType,
+                request.getAppliesToName()
         );
         couponAppliesToRepository.save(appliesTo);
         return couponInfo.getId();
+    }
+
+    public CouponInfoReadPageResponse getCouponsPage(Pageable pageable) {
+        Page<CouponInfo> couponInfoPage = couponInfoRepository.findWithDynamicQuery(pageable);
+        return CouponInfoReadPageResponse.fromPage(couponInfoPage);
+    }
+
+    public Page<CouponInfo> getCoupons(Pageable pageable) {
+        return couponInfoRepository.findWithDynamicQuery(pageable);
     }
 
     @Transactional
     public Long modifyCouponInfo(CouponModifyRequest request, Long couponInfoId) {
         CouponInfo couponInfo = couponInfoRepository.findById(couponInfoId)
                 .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found for id: " + couponInfoId));
+        CouponAppliesTo couponAppliesTo = couponAppliesToRepository.findByCouponInfoId(couponInfoId)
+                .orElseThrow(() -> new EntityNotFoundException("CouponAppliesTo not found for couponInfoId: " + couponInfoId));
+
         couponInfo.updateDetails(request);
+        couponAppliesTo.updateDetails(request);
 
         return couponInfo.getId();
     }

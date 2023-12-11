@@ -1,4 +1,4 @@
-package com.dailyon.promotionservice.domain.coupon.entity;
+package com.dailyon.promotionservice.domain.coupon.entity.enums;
 
 public enum CouponTargetType {
     PRODUCT,
