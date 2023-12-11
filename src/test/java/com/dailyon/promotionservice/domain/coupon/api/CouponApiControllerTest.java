@@ -1,21 +1,15 @@
 package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.ControllerTestSupport;
-import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
-import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
-import com.dailyon.promotionservice.domain.coupon.entity.CouponTargetType;
-import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import javax.persistence.EntityNotFoundException;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;

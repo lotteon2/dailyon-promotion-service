@@ -4,6 +4,8 @@ import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.*;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
@@ -23,19 +25,17 @@ import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.dailyon.promotionservice.domain.coupon.entity.DiscountType.fromString;
+import static com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType.fromString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
+import software.amazon.awssdk.services.dynamodb.endpoints.internal.Value;
 
 @Transactional
 @ExtendWith(SpringExtension.class)
@@ -84,6 +84,7 @@ public class CouponServiceTest {
                 1000,
                 "PRODUCT",
                 1L, // product ID 임의로 넣음.
+                "나이키신발",
                 true,
                 "https://image.url/summer-sale.jpg",
                 0L,
@@ -127,6 +128,7 @@ public class CouponServiceTest {
                 1000,
                 "INVALID_TYPE", // CouponType ENUM에 존재하는 값일것.
                 1L,
+                "나이키신발",
                 true,
                 "https://image.url/invalid-type-sale.jpg",
                 0L,
@@ -356,8 +358,17 @@ public class CouponServiceTest {
                 .targetImgUrl("https://image.url/test-coupon.jpg")
                 .build();
 
+        CouponAppliesTo testCouponAppliesTo = CouponAppliesTo.builder()
+                .couponInfo(testCouponInfo) // 1:1 식별관계라서 직접 couponInfoId를 할당하려 하면 오류
+                .appliesToId(1L)
+                .appliesToType(CouponTargetType.PRODUCT)
+                .appliesToName("나이키신발")
+                .build();
+
+
         // 엔티티를 영속성 컨텍스트에 저장하고 flush (commit은 테스트 프레임워크가 관리)
         em.persist(testCouponInfo);
+        em.persist(testCouponAppliesTo);
         em.flush();
 
         // 생성된 쿠폰 정보의 ID 반환
@@ -374,6 +385,7 @@ public class CouponServiceTest {
                 .endAt(LocalDateTime.now().plusDays(20)) // 10 -> 20
                 .issuedQuantity(500) // 1000 -> 500
                 .requiresConcurrencyControl(false)
+                .appliesToId(1L)
                 .targetImgUrl("https://image.url/updated-coupon.jpg") // url 변경값
                 .build();
     }
@@ -386,6 +398,7 @@ public class CouponServiceTest {
                 .discountValue(19L)
                 .startAt(LocalDateTime.now().plusDays(3))
                 .endAt(LocalDateTime.now().plusDays(20))
+                .appliesToId(1L)
                 .issuedQuantity(500)
                 .requiresConcurrencyControl(false)
                 .targetImgUrl("https://image.url/updated-coupon.jpg")
@@ -409,8 +422,9 @@ public class CouponServiceTest {
 
         CouponTargetType appliesToType = CouponTargetType.PRODUCT;
         Long appliesToId = 1L;
+        String appliesToName = "나이키신발";
 
-        CouponAppliesTo testCouponAppliesTo = CouponAppliesTo.createWithCouponInfo(testCouponInfo, appliesToId, appliesToType);
+        CouponAppliesTo testCouponAppliesTo = CouponAppliesTo.createWithCouponInfo(testCouponInfo, appliesToId, appliesToType, appliesToName);
         couponAppliesToRepository.save(testCouponAppliesTo);
         em.flush();
         em.clear();
@@ -429,6 +443,7 @@ public class CouponServiceTest {
                     1000,
                     "PRODUCT",
                     1L, // product ID 임의로 넣음.
+                    "나이키신발",
                     true,
                     "https://image.url/summer-sale.jpg",
                 0L,
@@ -445,6 +460,7 @@ public class CouponServiceTest {
                     1000,
                     "PRODUCT",
                     2L, // product ID 임의로 넣음.
+                    "나이키신발",
                     true,
                     "https://image.url/summer-sale.jpg",
                 0L,
@@ -461,6 +477,7 @@ public class CouponServiceTest {
                     1000,
                     "CATEGORY",
                     1L, // product ID 임의로 넣음.
+                    "나이키신발",
                     true,
                     "https://image.url/summer-sale.jpg",
                     0L,
@@ -477,6 +494,7 @@ public class CouponServiceTest {
                     1000,
                     "CATEGORY",
                     2L, // product ID 임의로 넣음.
+                    "나이키신발",
                     true,
                     "https://image.url/summer-sale.jpg",
                     0L,
@@ -504,6 +522,7 @@ public class CouponServiceTest {
                 1000,
                 "CATEGORY",
                 1L, // category ID 임의로 넣음.
+                "나이키신발",
                 false,
                 "https://image.url/summer-sale.jpg",
                 0L,
@@ -525,6 +544,7 @@ public class CouponServiceTest {
                 1000,
                 "CATEGORY",
                 1L, // category ID 임의로 넣음.
+                "나이키신발",
                 false,
                 "https://image.url/summer-sale.jpg",
                 0L,
@@ -546,6 +566,7 @@ public class CouponServiceTest {
                 0,
                 "CATEGORY",
                 1L, // category ID 임의로 넣음.
+                "나이키신발",
                 false,
                 "https://image.url/summer-sale.jpg",
                 0L,

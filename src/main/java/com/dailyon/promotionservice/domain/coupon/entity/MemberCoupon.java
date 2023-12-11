@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice.domain.coupon.entity;
 
+import com.dailyon.promotionservice.domain.common.BaseTimeEntity;
 import lombok.*;
 
 import javax.persistence.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @IdClass(MemberCoupon.MemberCouponId.class) // composite primary 표현 위한 IdClass
-public class MemberCoupon {
+public class MemberCoupon extends BaseTimeEntity {
 
     @Id
     private Long memberId;

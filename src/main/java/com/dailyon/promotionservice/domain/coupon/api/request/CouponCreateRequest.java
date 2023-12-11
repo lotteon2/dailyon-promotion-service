@@ -1,7 +1,7 @@
 package com.dailyon.promotionservice.domain.coupon.api.request;
 
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
-import com.dailyon.promotionservice.domain.coupon.entity.DiscountType;
+import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -9,7 +9,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-import static com.dailyon.promotionservice.domain.coupon.entity.DiscountType.fromString;
+import static com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType.fromString;
 
 @Builder
 @Getter
@@ -29,6 +29,7 @@ public class CouponCreateRequest {
 
     @NotEmpty private String appliesToType; //coupon 도메인의 entity 패키지에 있는 CouponType ENUM 클래스와 호환
     @NotNull private Long appliesToId;
+    private String appliesToName;
 
     @NotNull private Boolean requiresConcurrencyControl;
     private String targetImgUrl;
