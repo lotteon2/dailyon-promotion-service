@@ -153,6 +153,22 @@ public class CouponService {
         ).collect(Collectors.toList());
     }
 
+    public List<CouponInfoItemWithAvailabilityResponse> getActiveCouponsForProductAndCategoryWithAvailability(long memberId,
+                                                                                              long productId, long categoryId) {
+        List<CouponInfo> couponInfos = couponInfoRepository.findCouponInfosByProductIdAndCategoryId(productId, categoryId);
+
+        Set<Long> downloadedCouponIds = memberCouponRepository.findByMemberId(memberId).stream()
+                .map(MemberCoupon::getCouponInfoId)
+                .collect(Collectors.toSet());
+
+        return couponInfos.stream()
+                .map(couponInfo -> CouponInfoItemWithAvailabilityResponse.from(
+                        couponInfo,
+                        !downloadedCouponIds.contains(couponInfo.getId()))  // isDownloadable is true if memberId does not have this coupon
+                )
+                .collect(Collectors.toList());
+    }
+
     public List<CouponInfoItemResponse> getActiveCouponsForCategory(Long categoryId) {
         List<CouponInfo> activeCoupons = couponInfoRepository.findActiveCouponsForCategory(categoryId);
         return activeCoupons.stream()
