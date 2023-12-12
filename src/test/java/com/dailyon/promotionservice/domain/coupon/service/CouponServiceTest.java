@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice.domain.coupon.service;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
@@ -11,6 +12,7 @@ import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepositor
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemWithAvailabilityResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +37,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.dynamodb.endpoints.internal.Value;
 
 @Transactional
 @ExtendWith(SpringExtension.class)
@@ -56,11 +57,11 @@ public class CouponServiceTest {
     @BeforeEach
     void setUp() {
         testCouponInfoDataSetup();
+        System.out.println("@@@@@@@@@@@@@@@SET UP COMPLETE@@@@@@@@@@@@@@@");
     }
 
     @AfterEach
     void tearDown() {
-
         System.out.println("@@@@@@@@@@@@@@@ROLLBACK@@@@@@@@@@@@@@@");
         memberCouponRepository.deleteAllInBatch();
         couponAppliesToRepository.deleteAllInBatch();
@@ -280,8 +281,8 @@ public class CouponServiceTest {
         Long productId = 1L;
         Long categoryId = 1L;
         List<CouponInfoItemResponse> expectedCoupons = List.of(
-                new CouponInfoItemResponse(CouponTargetType.PRODUCT, 1L, DiscountType.PERCENTAGE, 20L, LocalDateTime.parse("2023-12-04T16:53:35.066194")),
-                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.parse("2023-12-04T16:53:35.066194"))
+                new CouponInfoItemResponse(1L, CouponTargetType.PRODUCT, 1L, DiscountType.PERCENTAGE, 20L, LocalDateTime.parse("2023-12-04T16:53:35.066194")),
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.parse("2023-12-04T16:53:35.066194"))
         );
 
         List<CouponInfoItemResponse> activeCoupons = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
@@ -293,7 +294,7 @@ public class CouponServiceTest {
     void downloadCoupon_Success() {
         // given
         Long memberId = 1L;
-        Long couponInfoId = normalDataSetup();
+        Long couponInfoId = normalCategoryDataSetup();
         Optional<CouponInfo> optionalCouponInfo = couponInfoRepository.findById(couponInfoId);
         assertTrue(optionalCouponInfo.isPresent());
         CouponInfo couponInfo = optionalCouponInfo.get();
@@ -311,7 +312,7 @@ public class CouponServiceTest {
     void downloadCoupon_ExpiredCoupon() {
         // given
         Long memberId = 1L;
-        Long couponInfoId = expiredCouponDataSetup();
+        Long couponInfoId = expiredCategoryDataSetup();
         Optional<CouponInfo> optionalCouponInfo = couponInfoRepository.findById(couponInfoId);
         assertTrue(optionalCouponInfo.isPresent());
 
@@ -344,6 +345,55 @@ public class CouponServiceTest {
     }
 
 
+    @Test
+    @DisplayName("유저의 단일 상품 적용 다운로드 가능/기 다운로드 쿠폰 리스트 조회 - 유효한요청/쿠폰 없음")
+    void whenGetActiveCouponsForProductAndCategoryWithAvailability_thenSuccessWithEmpty() {
+        // given
+        long memberId = 1L;
+        long productId = 9999L; // 존재하지않는 상품 id
+        long categoryId = 9999L; // 존재하지 않는 카테고리 id
+
+        // when
+        List<CouponInfoItemWithAvailabilityResponse> results = couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
+
+        // then
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    @DisplayName("유저의 단일 상품 적용 다운로드 가능/기 다운로드 쿠폰 리스트 조회 - 유효한요청/모두 다운로드 가능한 상황")
+    void whenGetActiveCouponsForProductAndCategoryWithAvailability_thenSuccess() {
+        // given
+        long memberId = 1L;
+        long productId = 1L;
+        long categoryId = 1L;
+
+        // when
+        List<CouponInfoItemWithAvailabilityResponse> results = couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
+
+        // then
+        assertFalse(results.isEmpty());
+        assertTrue(results.stream().anyMatch(CouponInfoItemWithAvailabilityResponse::getIsDownloadable));
+
+    }
+
+    @Test
+    @DisplayName("유저의 단일 상품 적용 다운로드 가능/기 다운로드 쿠폰 리스트 조회 - 다운로드 이후 달라지는 결과 확인")
+    void whenGetActiveCouponsForProductAndCategoryWithAvailability_CompareAfterDownloadCoupon() {
+        // given
+        long memberId = 1L;
+        long productId = 1L;
+        long categoryId = 1L;
+
+        // when
+        List<CouponInfoItemWithAvailabilityResponse> resultsWithBeforeDownload = couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
+        couponService.downloadCoupon(memberId, resultsWithBeforeDownload.get(0).getCouponInfoId()); // 다운로드 해서 달라지는걸 확인
+
+        List<CouponInfoItemWithAvailabilityResponse> resultsWithAfterDownload = couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
+
+        // then
+        assertNotEquals(resultsWithBeforeDownload, resultsWithAfterDownload);
+    }
 
     private Long createTestCouponInfo() {
         // 실제 테스트 데이터로 'CouponInfo' 인스턴스 생성
@@ -502,7 +552,6 @@ public class CouponServiceTest {
             );
 
 
-
         couponService.createCouponInfoWithAppliesTo(create_request1);
         couponService.createCouponInfoWithAppliesTo(create_request2);
         couponService.createCouponInfoWithAppliesTo(create_request3);
@@ -512,7 +561,7 @@ public class CouponServiceTest {
         em.clear();
     }
 
-    private Long normalDataSetup() {
+    private Long normalCategoryDataSetup() {
         CouponCreateRequest normalCase1 = new CouponCreateRequest(
                 "PERCENTAGE_CATEGORY_SALE",
                 "PERCENTAGE", // discountRate
@@ -521,6 +570,28 @@ public class CouponServiceTest {
                 LocalDateTime.now().plusDays(5),
                 1000,
                 "CATEGORY",
+                1L, // category ID 임의로 넣음.
+                "신발카테고리",
+                false,
+                "https://image.url/summer-sale.jpg",
+                0L,
+                null
+        );
+        Long couponInfoId = couponService.createCouponInfoWithAppliesTo(normalCase1);
+        em.flush();
+        em.clear();
+        return couponInfoId;
+    }
+
+    private Long normalProductDataSetup() {
+        CouponCreateRequest normalCase1 = new CouponCreateRequest(
+                "PERCENTAGE_CATEGORY_SALE",
+                "PERCENTAGE", // discountRate
+                10L,
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(5),
+                1000,
+                "PRODUCT",
                 1L, // category ID 임의로 넣음.
                 "나이키신발",
                 false,
@@ -534,7 +605,7 @@ public class CouponServiceTest {
         return couponInfoId;
     }
 
-    private Long expiredCouponDataSetup() {
+    private Long expiredCategoryDataSetup() {
         CouponCreateRequest normalCase1 = new CouponCreateRequest(
                 "PERCENTAGE_CATEGORY_SALE",
                 "PERCENTAGE", // discountRate
@@ -544,7 +615,7 @@ public class CouponServiceTest {
                 1000,
                 "CATEGORY",
                 1L, // category ID 임의로 넣음.
-                "나이키신발",
+                "신발카테고리",
                 false,
                 "https://image.url/summer-sale.jpg",
                 0L,
