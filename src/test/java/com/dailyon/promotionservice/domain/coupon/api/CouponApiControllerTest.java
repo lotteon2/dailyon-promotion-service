@@ -4,6 +4,7 @@ import com.dailyon.promotionservice.ControllerTestSupport;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemWithAvailabilityResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -39,8 +42,8 @@ public class CouponApiControllerTest extends ControllerTestSupport {
         long productId = 1L;
         long categoryId = 100L;
         List<CouponInfoItemResponse> mockResponse = Arrays.asList(
-                new CouponInfoItemResponse(CouponTargetType.PRODUCT, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
-                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
+                new CouponInfoItemResponse(1L, CouponTargetType.PRODUCT, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
         );
         when(couponService.getActiveCouponsForProductAndCategory(productId, categoryId)).thenReturn(mockResponse);
 
@@ -73,8 +76,8 @@ public class CouponApiControllerTest extends ControllerTestSupport {
         // Given
         long categoryId = 1L;
         List<CouponInfoItemResponse> mockResponse = Arrays.asList(
-                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
-                new CouponInfoItemResponse(CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
         );
         when(couponService.getActiveCouponsForCategory(categoryId)).thenReturn(mockResponse);
 
@@ -130,5 +133,38 @@ public class CouponApiControllerTest extends ControllerTestSupport {
 
         // 호출 안됨을 검증
         verify(couponService, never()).downloadCoupon(anyLong(), anyLong());
+    }
+
+    @Test
+    @DisplayName("단일상품에 대한 쿠폰 리스트 반환[다운로드 가능 여부 포함] - 유효한 요청")
+    void whenGetSingleProductCouponWithAvailability_thenReturnsListOfCouponsWithAvailability() throws Exception {
+        // Given
+        long memberId = 1L;
+        long productId = 1L;
+        long categoryId = 100L;
+        List<CouponInfoItemWithAvailabilityResponse> mockResponse = Collections.singletonList(
+                CouponInfoItemWithAvailabilityResponse.builder()
+                        .appliesToType(CouponTargetType.PRODUCT)
+                        .appliedToId(productId)
+                        .discountType(DiscountType.FIXED_AMOUNT)
+                        .discountValue(5000L)
+                        .endAt(LocalDateTime.now().plusDays(5))
+                        .isDownloadable(true)
+                        .build()
+        );
+        when(couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId)).thenReturn(mockResponse);
+
+        // When // Then
+        mockMvc.perform(get("/coupons/single-product/with-availability")
+                        .header("memberId", memberId) // Using header for memberId in this case
+                        .param("productId", String.valueOf(productId))
+                        .param("categoryId", String.valueOf(categoryId)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(mockResponse.size())))
+                .andExpect(jsonPath("$[0].isDownloadable", is(true)));
+
+        // 1회 호출 검증
+        verify(couponService, times(1)).getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
     }
 }
