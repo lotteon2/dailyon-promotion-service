@@ -8,6 +8,7 @@ import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeExc
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemWithAvailabilityResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,14 @@ public class CouponApiController {
     @GetMapping(value = "/single-product", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
     public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {
         List<CouponInfoItemResponse> couponExistenceList = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);
+        return ResponseEntity.ok(couponExistenceList);
+    }
+
+    @GetMapping(value = "/single-product/with-availability", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
+    public ResponseEntity<List<CouponInfoItemWithAvailabilityResponse>> getSingleProductCouponWithAvailability(@RequestHeader long memberId,
+            @RequestParam long productId, @RequestParam long categoryId) {
+        // memberId = 1L; // 인증 테스트 될 때까지 이렇게 진행.
+        List<CouponInfoItemWithAvailabilityResponse> couponExistenceList = couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
         return ResponseEntity.ok(couponExistenceList);
     }
 
