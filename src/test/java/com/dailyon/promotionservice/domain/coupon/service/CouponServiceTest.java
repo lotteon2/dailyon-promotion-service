@@ -281,8 +281,8 @@ public class CouponServiceTest {
         Long productId = 1L;
         Long categoryId = 1L;
         List<CouponInfoItemResponse> expectedCoupons = List.of(
-                new CouponInfoItemResponse(1L, CouponTargetType.PRODUCT, 1L, DiscountType.PERCENTAGE, 20L, LocalDateTime.parse("2023-12-04T16:53:35.066194")),
-                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.parse("2023-12-04T16:53:35.066194"))
+                new CouponInfoItemResponse(1L, CouponTargetType.PRODUCT, 1L, DiscountType.PERCENTAGE, 20L, LocalDateTime.parse("2023-12-04T16:53:35.066194"), 0L, null),
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.parse("2023-12-04T16:53:35.066194"), 0L, null)
         );
 
         List<CouponInfoItemResponse> activeCoupons = couponService.getActiveCouponsForProductAndCategory(productId, categoryId);

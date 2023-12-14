@@ -42,8 +42,8 @@ public class CouponApiControllerTest extends ControllerTestSupport {
         long productId = 1L;
         long categoryId = 100L;
         List<CouponInfoItemResponse> mockResponse = Arrays.asList(
-                new CouponInfoItemResponse(1L, CouponTargetType.PRODUCT, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
-                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
+                new CouponInfoItemResponse(1L, CouponTargetType.PRODUCT, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5), 0L, null),
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1), 0L, null)
         );
         when(couponService.getActiveCouponsForProductAndCategory(productId, categoryId)).thenReturn(mockResponse);
 
@@ -76,8 +76,8 @@ public class CouponApiControllerTest extends ControllerTestSupport {
         // Given
         long categoryId = 1L;
         List<CouponInfoItemResponse> mockResponse = Arrays.asList(
-                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5)),
-                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1))
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.FIXED_AMOUNT, 5000L, LocalDateTime.now().plusDays(5), 0L, null),
+                new CouponInfoItemResponse(1L, CouponTargetType.CATEGORY, 1L, DiscountType.PERCENTAGE, 10L, LocalDateTime.now().plusWeeks(1), 0L, null)
         );
         when(couponService.getActiveCouponsForCategory(categoryId)).thenReturn(mockResponse);
 
