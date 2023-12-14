@@ -29,6 +29,8 @@ public class CouponInfoItemWithAvailabilityResponse extends CouponInfoItemRespon
                 .discountType(couponInfo.getDiscountType())
                 .discountValue(couponInfo.getDiscountValue())
                 .endAt(couponInfo.getEndAt())
+                .minPurchaseAmount(couponInfo.getMinPurchaseAmount())
+                .maxDiscountAmount(couponInfo.getMaxDiscountAmount())
                 .isDownloadable(isDownloadable)
                 .build();
     }

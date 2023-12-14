@@ -24,6 +24,9 @@ public class CouponInfoItemResponse {
     private Long discountValue;
     private LocalDateTime endAt;
 
+    private Long minPurchaseAmount;
+    private Long maxDiscountAmount;
+
     public static CouponInfoItemResponse from(CouponInfo couponInfo) {
         return CouponInfoItemResponse.builder()
                 .couponInfoId(couponInfo.getId())
@@ -32,6 +35,8 @@ public class CouponInfoItemResponse {
                 .discountType(couponInfo.getDiscountType())
                 .discountValue(couponInfo.getDiscountValue())
                 .endAt(couponInfo.getEndAt())
+                .minPurchaseAmount(couponInfo.getMinPurchaseAmount())
+                .maxDiscountAmount(couponInfo.getMaxDiscountAmount())
                 .build();
     }
 }
