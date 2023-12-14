@@ -7,7 +7,7 @@ spring:
   # redis setting
   # TODO: redis settings cipher로 변경
   redis:
-    host: 127.0.0.1
+    host: redis-cluster
     port: 6379
     password: 11111111
 
