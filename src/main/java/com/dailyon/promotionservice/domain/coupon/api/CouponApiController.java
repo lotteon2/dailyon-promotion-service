@@ -46,13 +46,7 @@ public class CouponApiController {
         return ResponseEntity.ok(couponExistenceList);
     }
 
-    @PostMapping(value = "/multiple-products")
-    public ResponseEntity<MultipleProductCouponsResponse> getMultipleProductsCoupons(
-            @RequestBody MultipleProductsCouponRequest request) {
 
-        MultipleProductCouponsResponse couponsMap = couponService.getActiveCouponsForMultipleProductsAndCategories(request);
-        return ResponseEntity.ok(couponsMap);
-    }
 
     @GetMapping(params = "categoryId")
     public ResponseEntity<List<CouponInfoItemResponse>> getCategoryCoupon(@RequestParam long categoryId) {
