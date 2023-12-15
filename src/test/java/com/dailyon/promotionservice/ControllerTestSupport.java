@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice;
 
+import com.dailyon.promotionservice.config.JpaAuditConfig;
 import com.dailyon.promotionservice.domain.coupon.api.CouponAdminController;
 import com.dailyon.promotionservice.domain.coupon.api.CouponApiController;
 import com.dailyon.promotionservice.domain.coupon.api.CouponFeignController;
@@ -12,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(
@@ -25,6 +28,8 @@ import org.springframework.test.web.servlet.MockMvc;
 public class ControllerTestSupport {
 
     @Autowired protected MockMvc mockMvc;
+
+    @MockBean protected JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
     @Autowired protected ObjectMapper objectMapper;
 
