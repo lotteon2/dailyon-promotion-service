@@ -4,12 +4,14 @@ import ch.qos.logback.core.net.SyslogOutputStream;
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
+import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.*;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponAppliesToRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepository;
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
+import com.dailyon.promotionservice.domain.coupon.service.response.CheckoutCouponApplicationResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemWithAvailabilityResponse;
@@ -57,6 +59,7 @@ public class CouponServiceTest {
     @BeforeEach
     void setUp() {
         testCouponInfoDataSetup();
+//        testMemberCouponDataSetup();
         System.out.println("@@@@@@@@@@@@@@@SET UP COMPLETE@@@@@@@@@@@@@@@");
     }
 
@@ -425,6 +428,51 @@ public class CouponServiceTest {
         return testCouponInfo.getId();
     }
 
+    @Test
+    @DisplayName("Checkout에 적용 가능한 쿠폰 리스트 반환 - 멤버 및 상품 별")
+    void whenFindApplicableCoupons_thenReturnNestedCouponInfoList() {
+        // Given
+        Long memberId = 1L;
+        LocalDateTime now = LocalDateTime.now();
+
+        CouponInfo couponInfo = CouponInfo.builder()
+                .name("할인 쿠폰")
+                .discountType(DiscountType.FIXED_AMOUNT)
+                .discountValue(5000L)
+                .startAt(now.minusDays(1))
+                .endAt(now.plusDays(10))
+                .issuedQuantity(100)
+                .remainingQuantity(100)
+                .minPurchaseAmount(0L)
+                .build();
+        couponInfo = couponInfoRepository.save(couponInfo);
+
+        MemberCoupon memberCoupon = MemberCoupon.builder()
+                .memberId(memberId)
+                .couponInfoId(couponInfo.getId())
+                .couponInfo(couponInfo)
+                .isUsed(false)
+                .build();
+        memberCoupon = memberCouponRepository.save(memberCoupon);
+
+
+        MultipleProductsCouponRequest request = MultipleProductsCouponRequest.builder()
+                .products(
+                        List.of(
+                                new MultipleProductsCouponRequest.ProductCategoryPair(1L, 1L),
+                                new MultipleProductsCouponRequest.ProductCategoryPair(2L, 10L),
+                                new MultipleProductsCouponRequest.ProductCategoryPair(3L, 1L)
+                        )
+                )
+                .build();
+
+        // When
+        CheckoutCouponApplicationResponse result = couponService.findApplicableCoupons(memberId, request);
+
+        // Then
+        assertFalse(result.getNestedCouponInfoItemResponses().isEmpty());
+    }
+
     private CouponModifyRequest createCouponModifyRequest() {
         // CouponModifyRequest에 필요한 데이터를 기반으로 객체 생성
         return CouponModifyRequest.builder()
@@ -648,6 +696,51 @@ public class CouponServiceTest {
         em.clear();
         return couponInfoId;
     }
+
+//    private void testMemberCouponDataSetup() {
+//        Optional<CouponInfo> couponInfo1 = couponInfoRepository.findById(1L);
+//        Optional<CouponInfo> couponInfo2 = couponInfoRepository.findById(2L);
+
+//        MemberCoupon memberCoupon1 = MemberCoupon.builder()
+//                .memberId(5L)
+//                .couponInfoId(1L)
+//                .isUsed(false)
+//                .couponInfo(couponInfo1.get())
+//                .build();
+//
+//        MemberCoupon memberCoupon2 = MemberCoupon.builder()
+//                .memberId(5L)
+//                .couponInfoId(2L)
+//                .isUsed(false)
+//                .couponInfo(couponInfo2.get())
+//                .build();
+//        couponInfo1.ifPresent(info1 -> {
+//            MemberCoupon memberCoupon1 = MemberCoupon.builder()
+//                    .memberId(5L)
+//                    .couponInfoId(info1.getId())
+//                    .isUsed(false)
+//                    .couponInfo(info1)
+//                    .build();
+//            memberCouponRepository.save(memberCoupon1);
+//        });
+//
+//        couponInfo2.ifPresent(info2 -> {
+//            MemberCoupon memberCoupon2 = MemberCoupon.builder()
+//                    .memberId(5L)
+//                    .couponInfoId(info2.getId())
+//                    .isUsed(false)
+//                    .couponInfo(info2)
+//                    .build();
+//            memberCouponRepository.save(memberCoupon2);
+//        });
+//
+
+//        memberCouponRepository.save(memberCoupon1);
+//        memberCouponRepository.save(memberCoupon2);
+
+//        em.flush();
+//        em.clear();
+//    }
 
 //    private Long expiredCouponDataSetup() {
 //        CouponCreateRequest normalCase1 = new CouponCreateRequest(
