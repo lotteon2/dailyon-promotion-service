@@ -3,13 +3,10 @@ package com.dailyon.promotionservice.domain.coupon.api;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponExistenceResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.*;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDateRangeException;
 import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountException;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
-import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemWithAvailabilityResponse;
-import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -46,8 +43,6 @@ public class CouponApiController {
         return ResponseEntity.ok(couponExistenceList);
     }
 
-
-
     @GetMapping(params = "categoryId")
     public ResponseEntity<List<CouponInfoItemResponse>> getCategoryCoupon(@RequestParam long categoryId) {
         List<CouponInfoItemResponse> couponExistenceList = couponService.getActiveCouponsForCategory(categoryId);
@@ -56,11 +51,19 @@ public class CouponApiController {
 
     // 쿠폰 다운로드
     @PostMapping("/{coupon_id}/download")
-    public ResponseEntity<?> downloadCoupon(@RequestHeader("memberId") Long memberId,
+    public ResponseEntity<String> downloadCoupon(@RequestHeader("memberId") Long memberId,
                                             @PathVariable("coupon_id") Long couponId) {
         couponService.downloadCoupon(memberId, couponId);
         return ResponseEntity.ok("성공적으로 쿠폰을 다운로드 했습니다.");
     }
+
+    @PostMapping("/retrieve-applicable")
+    public ResponseEntity<CheckoutCouponApplicationResponse> getCouponsForCheckout(@RequestHeader Long memberId,
+                                                                                   @RequestBody MultipleProductsCouponRequest request) {
+        CheckoutCouponApplicationResponse checkoutCouponApplicationResponse = couponService.findApplicableCoupons(memberId, request);
+        return ResponseEntity.ok(checkoutCouponApplicationResponse);
+    }
+
 
 
 }
