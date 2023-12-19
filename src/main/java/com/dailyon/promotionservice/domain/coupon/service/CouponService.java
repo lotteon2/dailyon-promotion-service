@@ -280,4 +280,37 @@ public class CouponService {
         }
         return responses;
     }
+
+    public CheckoutCouponApplicationResponse findApplicableCoupons(Long memberId, MultipleProductsCouponRequest request) {
+        // memberCoupon의 isUsed 제거, 연결된 couponInfo의 startAt, endAt을 현재시각과 비교해서 active한것들만 가져옴
+        List<MemberCoupon> activeNotUsedMemberCoupons = memberCouponRepository.findActiveAndUnusedCouponsByMemberId(memberId);
+
+        // 빈 nested List 생성
+        List<List<CouponInfoItemCheckoutResponse>> nestedCouponInfoItemResponses = new ArrayList<>();
+
+        // request객체의 product/category Pair 순회
+        for (MultipleProductsCouponRequest.ProductCategoryPair productCategoryPair : request.getProducts()) {
+            // 받아온 쿠폰들 중 categoryId, productId 맞는 쿠폰들을 list로 넣음.
+            List<CouponInfoItemCheckoutResponse> applicableCoupons = activeNotUsedMemberCoupons.stream()
+                    .map(MemberCoupon::getCouponInfo)
+                    .filter(couponInfo -> isCouponApplicable(couponInfo, productCategoryPair))
+                    .map(CouponInfoItemCheckoutResponse::from)
+                    .collect(Collectors.toList());
+
+            nestedCouponInfoItemResponses.add(applicableCoupons);
+        }
+
+        return CheckoutCouponApplicationResponse.builder()
+                .nestedCouponInfoItemResponses(nestedCouponInfoItemResponses)
+                .build();
+    }
+
+    // TODO: 추상화해서 공통로직 뺴기.
+    // validateCouponsForOrder 메소드에도 같은 필터 로직이 있음.(변수 이름 같지만, 객체 타입이 달라서 추상화 필요)
+    private boolean isCouponApplicable(CouponInfo couponInfo, MultipleProductsCouponRequest.ProductCategoryPair pair) {
+        return (couponInfo.getAppliesTo().getAppliesToType() == CouponTargetType.PRODUCT
+                && couponInfo.getAppliesTo().getAppliesToId().equals(pair.getProductId()))
+                || (couponInfo.getAppliesTo().getAppliesToType() == CouponTargetType.CATEGORY
+                && couponInfo.getAppliesTo().getAppliesToId().equals(pair.getCategoryId()));
+    }
 }
