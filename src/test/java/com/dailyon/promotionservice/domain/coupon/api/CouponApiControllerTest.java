@@ -1,8 +1,11 @@
 package com.dailyon.promotionservice.domain.coupon.api;
 
 import com.dailyon.promotionservice.ControllerTestSupport;
+import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.DiscountType;
+import com.dailyon.promotionservice.domain.coupon.service.response.CheckoutCouponApplicationResponse;
+import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemCheckoutResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemResponse;
 import com.dailyon.promotionservice.domain.coupon.service.response.CouponInfoItemWithAvailabilityResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -167,4 +170,52 @@ public class CouponApiControllerTest extends ControllerTestSupport {
         // 1회 호출 검증
         verify(couponService, times(1)).getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
     }
+
+    
+    @Test
+    @DisplayName("주문서 적용가능 쿠폰 리스트 반환 - 유효한 요청")
+    void whenGetCouponsForCheckout_thenReturnsApplicableCouponList() throws Exception {
+        // Given
+        Long memberId = 1L;
+        MultipleProductsCouponRequest request = new MultipleProductsCouponRequest(Arrays.asList(MultipleProductsCouponRequest.ProductCategoryPair.builder().productId(1L).categoryId(1L).build()));
+        
+        List<List<CouponInfoItemCheckoutResponse>> nestedCouponInfoItemResponses = Arrays.asList(
+                Collections.singletonList(
+                    CouponInfoItemCheckoutResponse.builder()
+                        .couponInfoId(1L)
+                        .couponInfoName("나이키 에어포스 1 특가 할인")
+                        .appliesToType(CouponTargetType.PRODUCT)
+                        .appliedToId(1L)
+                        .discountType(DiscountType.FIXED_AMOUNT)
+                        .discountValue(15000L)
+                        .endAt(LocalDateTime.parse("2023-12-31T23:59:59"))
+                        .minPurchaseAmount(0L)
+                        .maxDiscountAmount(null)
+                        .build()
+                )
+        );
+
+        CheckoutCouponApplicationResponse mockResponse = CheckoutCouponApplicationResponse.builder()
+                .nestedCouponInfoItemResponses(nestedCouponInfoItemResponses)
+                .build();
+
+        when(couponService.findApplicableCoupons(memberId, request)).thenReturn(mockResponse);
+
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
+        // When // Then
+        mockMvc.perform(post("/coupons/retrieve-applicable")
+                        .header("memberId", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.nestedCouponInfoItemResponses", hasSize(nestedCouponInfoItemResponses.size())))
+                .andExpect(jsonPath("$.nestedCouponInfoItemResponses[0][0].couponInfoName", is("나이키 에어포스 1 특가 할인")));
+
+        // 1회 호출 검증
+        verify(couponService, times(1)).findApplicableCoupons(memberId, request);
+    }
+    
+    
 }
