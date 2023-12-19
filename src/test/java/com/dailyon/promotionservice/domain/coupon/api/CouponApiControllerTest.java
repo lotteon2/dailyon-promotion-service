@@ -177,7 +177,10 @@ public class CouponApiControllerTest extends ControllerTestSupport {
     void whenGetCouponsForCheckout_thenReturnsApplicableCouponList() throws Exception {
         // Given
         Long memberId = 1L;
-        MultipleProductsCouponRequest request = new MultipleProductsCouponRequest(Arrays.asList(MultipleProductsCouponRequest.ProductCategoryPair.builder().productId(1L).categoryId(1L).build()));
+        MultipleProductsCouponRequest request = new MultipleProductsCouponRequest(Arrays.asList(MultipleProductsCouponRequest.ProductCategoryPair.builder()
+                .productId(1L)
+                .categoryId(1L)
+                .build()));
         
         List<List<CouponInfoItemCheckoutResponse>> nestedCouponInfoItemResponses = Arrays.asList(
                 Collections.singletonList(
