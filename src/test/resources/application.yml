@@ -41,6 +41,9 @@ spring:
       enabled: false
     discovery:
       enabled: false # 테스트 코드 동작시 false로 해야 한다.
+  kafka:
+    consumer:
+      group-id: sj-kim
 
 logging:
   level:
