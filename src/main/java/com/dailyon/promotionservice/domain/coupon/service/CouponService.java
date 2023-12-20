@@ -7,6 +7,8 @@ import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyReques
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponValidationRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.dailyon.promotionservice.domain.coupon.entity.MemberCoupon;
+import com.dailyon.promotionservice.domain.coupon.infra.kafka.CouponEventProducer;
+import com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.OrderDTO;
 import com.dailyon.promotionservice.domain.coupon.service.response.*;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
@@ -36,6 +38,8 @@ public class CouponService {
     private final CouponInfoRepository couponInfoRepository;
     private final CouponAppliesToRepository couponAppliesToRepository;
     private final MemberCouponRepository memberCouponRepository;
+
+    private final CouponEventProducer couponEventProducer;
 
     @Transactional
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
@@ -227,6 +231,48 @@ public class CouponService {
 
         memberCoupon.markAsUsed();
     }
+
+    @Transactional
+    public void processCouponUsageAndPublishEvent(OrderDTO orderDTO) {
+        Long memberId = orderDTO.getMemberId();
+        List<Long> couponIds = orderDTO.getCouponInfos();
+
+        // 날릴 필요 없는 쿼리 최적화
+        if (couponIds.isEmpty()) { return; }
+
+        // 해당 회원의 모든 쿠폰 정보를 한 번의 쿼리로 가져옴.(memberCoupon과 영속화시킨 CouponInfo)
+        List<MemberCoupon> memberCoupons = memberCouponRepository.findMemberCouponsByMemberIdAndCouponInfoIds(memberId, couponIds);
+        // 가져온 쿠폰의 수가 요청한 쿠폰 수와 동일한지 확인.
+        if (couponIds.size() != memberCoupons.size()) {
+            throw new EntityNotFoundException("모든 쿠폰 정보를 찾을 수 없습니다.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        for (MemberCoupon memberCoupon : memberCoupons) {
+            if (memberCoupon.getIsUsed()) {
+                throw new ErrorResponseException("이미 사용된 쿠폰입니다.");
+            }
+
+            CouponInfo couponInfo = memberCoupon.getCouponInfo();
+            LocalDateTime expirationTimeWithGracePeriod = couponInfo.getEndAt().plusHours(1);
+            // 쿠폰의 유효기간 확인
+            if (now.isBefore(couponInfo.getStartAt()) || now.isAfter(expirationTimeWithGracePeriod)) {
+                throw new IllegalStateException("쿠폰의 유효기간이 지났습니다.");
+            }
+            memberCoupon.markAsUsed();
+        }
+        couponEventProducer.produceCouponSuccessMessage(orderDTO);
+    }
+
+    @Transactional
+    public void restoreUsedCoupons (Long memberId, List<Long> couponIds) {
+        // 날릴 필요 없는 쿼리 최적화
+        if (couponIds.isEmpty()) { return; }
+
+        List<MemberCoupon> memberCoupons = memberCouponRepository.findByMemberIdAndCouponInfoIdIn(memberId, couponIds);
+        memberCoupons.forEach(MemberCoupon::restore);
+    }
+
 
     public List<CouponValidationResponse> validateCouponsForOrder(Long memberId, List<CouponValidationRequest> request) {
         List<Long> couponInfoIds = new ArrayList<>();

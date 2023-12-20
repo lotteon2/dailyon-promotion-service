@@ -33,6 +33,7 @@ public class MemberCoupon extends BaseTimeEntity {
     private Boolean isUsed;
 
     public void markAsUsed() { this.isUsed = true; }
+    public void restore() { this.isUsed = false; }
 
     @AllArgsConstructor
     @NoArgsConstructor
