@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.infra.kafka;
 
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.OrderDTO;
+import com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.enums.OrderEvent;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -18,15 +19,20 @@ import static com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.enums.O
 public class CouponEventListener {
     private final ObjectMapper objectMapper;
     private final CouponService couponService;
+    private final CouponEventProducer couponEventProducer;
 
     // product-service로부터 메세지 받아서 쿠폰 사용처리
     @KafkaListener(topics = "create-order-product")
     public void onStockReductionSuccess(String message, Acknowledgment ack) {
+        OrderDTO orderDTO = null;
         try {
-            OrderDTO orderDTO = objectMapper.readValue(message, OrderDTO.class);
+            orderDTO = objectMapper.readValue(message, OrderDTO.class);
             couponService.processCouponUsageAndPublishEvent(orderDTO);
             ack.acknowledge();
         } catch (Exception e) {
+            if (orderDTO != null) {
+                couponEventProducer.produceCancelOrderMessage(orderDTO.withOrderEvent(OrderEvent.COUPON_FAIL));
+            }
             throw new ErrorResponseException("쿠폰 사용처리 도중 에러");
         }
     }

@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class OrderDTO {
 
     private List<ProductInfo> productInfos;
@@ -28,6 +28,10 @@ public class OrderDTO {
 //    private static PaymentInfo createPaymentInfo(String pgToken) {
 //        return PaymentInfo.builder().pgToken(pgToken).build();
 //    }
+
+    public OrderDTO withOrderEvent(OrderEvent newEvent) {
+        return this.toBuilder().orderEvent(newEvent).build();
+    }
 
     @Getter
     @NoArgsConstructor

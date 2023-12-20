@@ -26,4 +26,13 @@ public class CouponEventProducer {
             throw new ErrorResponseException("쿠폰 사용 완료 후, kafka 메세지 발송 중 에러");
         }
     }
+
+    public void produceCancelOrderMessage(OrderDTO orderDTO) {
+        try {
+            String data = objectMapper.writeValueAsString(orderDTO);
+            kafkaTemplate.send("cancel-order", data);
+        } catch (Exception e) {
+            throw new ErrorResponseException("쿠폰 사용 완료 후, kafka 메세지 발송 중 에러");
+        }
+    }
 }
