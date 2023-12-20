@@ -12,4 +12,5 @@ public interface MemberCouponRepository extends JpaRepository<MemberCoupon, Memb
     List<MemberCoupon> findByMemberIdAndCouponInfoIdIn(Long memberId, List<Long> couponInfoIds);
 
     List<MemberCoupon> findByMemberId(Long memberId);
+
 }

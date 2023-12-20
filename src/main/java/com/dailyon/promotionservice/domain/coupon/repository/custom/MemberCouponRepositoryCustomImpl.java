@@ -33,4 +33,19 @@ public class MemberCouponRepositoryCustomImpl extends QuerydslRepositorySupport 
 
         return query.fetch();
     }
+
+    @Override
+    public List<MemberCoupon> findMemberCouponsByMemberIdAndCouponInfoIds(Long memberId, List<Long> couponInfoIds) {
+        QMemberCoupon qMemberCoupon = QMemberCoupon.memberCoupon;
+        QCouponInfo qCouponInfo = QCouponInfo.couponInfo;
+
+        LocalDateTime now = LocalDateTime.now();
+
+        JPQLQuery<MemberCoupon> query = from(qMemberCoupon)
+                .innerJoin(qMemberCoupon.couponInfo, qCouponInfo).fetchJoin()
+                .where(qMemberCoupon.memberId.eq(memberId)
+                        .and(qMemberCoupon.couponInfoId.in(couponInfoIds)));
+
+        return query.fetch();
+    }
 }

@@ -35,6 +35,25 @@ spring:
       access-key: access-key  # if not using environment variables or IAM
       secret-key: secret-key  # if not using environment variables or IAM
 
+  kafka:
+    producer:
+      bootstrap-servers: kafka-service:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Leader Broker가 메시지를 받았는지 확인 신호 요청
+      acks: 1
+    consumer:
+      bootstrap-servers: kafka-service:9092
+      # 컨슈머 그룹 지정 - 컨슈머 그룹안의 하나의 컨슈머가 다운되더라도 컨슈머 그룹 안의 다른 컨슈머가 읽을 수 있도록 함 또한 Offset으로 재시작시 메시지 관리 가능
+      group-id: promotion-service
+      # Kafka consumer가 다운되었을 때 가장 빠른 컨슈머 오프셋을 가지는 것 부터 읽는다.
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual
+
+
 eureka:
   client:
     register-with-eureka: true

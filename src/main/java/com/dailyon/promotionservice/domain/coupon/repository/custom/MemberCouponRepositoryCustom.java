@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface MemberCouponRepositoryCustom {
     List<MemberCoupon> findActiveAndUnusedCouponsByMemberId(Long memberId);
+
+    List<MemberCoupon> findMemberCouponsByMemberIdAndCouponInfoIds(Long memberId, List<Long> couponInfoIds);
 }
