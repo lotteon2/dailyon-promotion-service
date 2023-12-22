@@ -75,6 +75,8 @@ spec:
           volumeMounts:
             - name: mysql-config
               mountPath: /etc/mysql/conf.d
+            - name: promotion-ebs-pv
+              mountPath: /var/lib/mysql
           imagePullPolicy: IfNotPresent
           # 애플리케이션이 시작된 뒤 초기화 작업이 마무리되어 준비되었는지 검사
           readinessProbe:
@@ -88,6 +90,13 @@ spec:
               port: 3306
             initialDelaySeconds: 20
             periodSeconds: 20
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-config
+        - name: promotion-ebs-pv
+          persistentVolumeClaim:
+            claimName: promotion-ebs-pvc
       restartPolicy: Always
       affinity:
         nodeAffinity:
