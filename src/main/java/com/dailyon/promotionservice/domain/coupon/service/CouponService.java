@@ -238,7 +238,11 @@ public class CouponService {
         List<Long> couponIds = orderDTO.getCouponInfos();
 
         // 날릴 필요 없는 쿼리 최적화
-        if (couponIds.isEmpty()) { return; }
+        if (couponIds.isEmpty()) { 
+            // chreography라서 날려줘야.
+            couponEventProducer.produceCouponSuccessMessage(orderDTO);
+            return;
+        }
 
         // 해당 회원의 모든 쿠폰 정보를 한 번의 쿼리로 가져옴.(memberCoupon과 영속화시킨 CouponInfo)
         List<MemberCoupon> memberCoupons = memberCouponRepository.findMemberCouponsByMemberIdAndCouponInfoIds(memberId, couponIds);
