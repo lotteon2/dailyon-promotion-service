@@ -21,7 +21,7 @@ spring:
   # dynamoDB 설정 추가 필요
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/promotion-service
+    url: jdbc:mysql://promotion-db-service:3306/promotion-service
     username: root
     password: 11111111
   # AWS DynamoDB settings 어떻게 될지 정해지지않아서 이렇게 두었음.
