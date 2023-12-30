@@ -3,26 +3,57 @@ spring:
     activate:
       on-profile: dev
     import: optional:configserver:http://config-service:8888
+
+  # redis setting
+  # TODO: redis settings cipher로 변경
+  redis:
+    host: redis-cluster
+    port: 6379
+    password: 11111111
+
   # rabbitmq settings
   rabbitmq:
     host: rabbitmq-service
     port: 5672
     username: guest
     password: guest
+
   # DB settings
-  # dynamoDB 설정 추가 필요
+  # TODO: mysqlDB setting cipher로 변경
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/promotion-service
     username: root
     password: 11111111
-  # AWS DynamoDB settings 어떻게 될지 정해지지않아서 이렇게 두었음.
+
+  # AWS DynamoDB settings
+  # TODO: dynamoDB setting cipher로 변경
   data:
     dynamodb:
       endpoint: https://dynamodb.us-west-2.amazonaws.com # Use appropriate AWS Region
       region: us-west-2  # Use appropriate AWS Region
       access-key: access-key  # if not using environment variables or IAM
       secret-key: secret-key  # if not using environment variables or IAM
+
+  kafka:
+    producer:
+      bootstrap-servers: kafka-service:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Leader Broker가 메시지를 받았는지 확인 신호 요청
+      acks: 1
+    consumer:
+      bootstrap-servers: kafka-service:9092
+      # 컨슈머 그룹 지정 - 컨슈머 그룹안의 하나의 컨슈머가 다운되더라도 컨슈머 그룹 안의 다른 컨슈머가 읽을 수 있도록 함 또한 Offset으로 재시작시 메시지 관리 가능
+      group-id: promotion-service
+      # Kafka consumer가 다운되었을 때 가장 빠른 컨슈머 오프셋을 가지는 것 부터 읽는다.
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual
+
+
 eureka:
   client:
     register-with-eureka: true

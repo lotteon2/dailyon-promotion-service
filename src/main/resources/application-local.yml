@@ -3,12 +3,21 @@ spring:
     activate:
       on-profile: local
     import: optional:configserver:http://127.0.0.1:8888
+
+  # redis setting
+  # TODO: redis settings cipher로 변경
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: 11111111
+
   # rabbitmq settings
   rabbitmq:
     host: 127.0.0.1
     port: 5672
     username: guest
     password: guest
+
   # h2 settings
   h2:
     console:
@@ -16,6 +25,8 @@ spring:
       settings:
         web-allow-others: true
       path: /h2-console
+
+  # mysql DB settings
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:promotion-service;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false;MODE=MySQL
@@ -28,13 +39,35 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  # AWS DynamoDB settings 어떻게 될지 정해지지않아서 이렇게 두었음. Local설정.
+
+  # AWS DynamoDB settings Local설정.
   data:
     dynamodb:
       endpoint: http://localhost:8001  # DynamoDB Local의 엔드포인트. port번호 아직 안정해졌음.
       region: us-west-2  # 지역 설정, 로컬에서 큰 영향을 미치지는 않지만 필요함
       access-key: dummy-access-key  # 액세스 키, 로컬에서는 실제 값 불필요
       secret-key: dummy-secret-key  # 비밀 키, 로컬에서는 실제 값 불필요
+  sql:
+    init:
+      encoding: UTF-8
+
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Leader Broker가 메시지를 받았는지 확인 신호 요청
+      acks: 1
+    consumer:
+      bootstrap-servers: localhost:9092
+      # 컨슈머 그룹 지정 - 컨슈머 그룹안의 하나의 컨슈머가 다운되더라도 컨슈머 그룹 안의 다른 컨슈머가 읽을 수 있도록 함 또한 Offset으로 재시작시 메시지 관리 가능
+      group-id: promotion-service
+      # Kafka consumer가 다운되었을 때 가장 빠른 컨슈머 오프셋을 가지는 것 부터 읽는다.
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual
 
 eureka:
   client:
@@ -48,8 +81,8 @@ eureka:
 logging:
   level:
     org:
-      hibernate:
-        SQL: DEBUG
+#      hibernate:
+#        SQL: DEBUG
       springframework:
         jdbc:
           core:

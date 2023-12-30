@@ -3,6 +3,14 @@ spring:
     activate:
       on-profile: prod
     import: optional:configserver:http://config-service:8888
+
+  # redis setting
+  # TODO: redis settings cipher로 변경
+  redis:
+    host: redis-cluster
+    port: 6379
+    password: 11111111
+
   # rabbitmq settings
   rabbitmq:
     host: rabbitmq-service
@@ -20,9 +28,9 @@ spring:
   data:
     dynamodb:
       endpoint: https://dynamodb.us-west-2.amazonaws.com # Use appropriate AWS Region
-      region: us-west-2  # Use appropriate AWS Region
-      access-key: access-key  # if not using environment variables or IAM
-      secret-key: secret-key  # if not using environment variables or IAM
+      region: us-west-2 # Use appropriate AWS Region
+      access-key: access-key # if not using environment variables or IAM
+      secret-key: secret-key # if not using environment variables or IAM
 eureka:
   client:
     register-with-eureka: true
@@ -34,3 +42,10 @@ eureka:
     # 기본적으로 유레카는 '호스트 이름'으로 접속하는 서비스를 레지스트리에 등록 -> 로컬(localhost)
     # 따라서 쿠버네티스, 도커와 같이 임의의 호스트 이름을 가지는 경우는 false로 하면 클라이언트를 인식하지 못한다.
     prefer-ip-address: true
+
+logging:
+  level:
+    org:
+      apache.kafka: ERROR
+      kafka: ERROR
+      apache.zookeeper: ERROR
