@@ -6,6 +6,7 @@ import com.dailyon.promotionservice.domain.coupon.entity.QCouponInfo;
 import com.dailyon.promotionservice.domain.coupon.entity.QMemberCoupon;
 import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import lombok.NoArgsConstructor;
@@ -42,9 +43,13 @@ public class CouponInfoRepositoryCustomImpl extends QuerydslRepositorySupport im
         QCouponInfo couponInfo = QCouponInfo.couponInfo;
         QCouponAppliesTo couponAppliesTo = QCouponAppliesTo.couponAppliesTo;
 
+        BooleanExpression productCondition = couponInfo.appliesTo.appliesToType.eq(CouponTargetType.PRODUCT)
+                .and(couponInfo.appliesTo.appliesToId.eq(productId));
+        BooleanExpression categoryCondition = couponInfo.appliesTo.appliesToType.eq(CouponTargetType.CATEGORY)
+                .and(couponInfo.appliesTo.appliesToId.eq(categoryId));
+
         JPQLQuery<CouponInfo> query = from(couponInfo)
-                .where(couponInfo.appliesTo.appliesToId.in(productId, categoryId)
-                        .and(couponInfo.appliesTo.appliesToType.in(CouponTargetType.PRODUCT, CouponTargetType.CATEGORY))
+                .where(productCondition.or(categoryCondition)
                         .and(couponInfo.startAt.loe(LocalDateTime.now()))
                         .and(couponInfo.endAt.goe(LocalDateTime.now()))
                         .and(couponInfo.remainingQuantity.gt(0)));
