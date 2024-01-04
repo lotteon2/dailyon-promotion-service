@@ -1,19 +1,17 @@
 package com.dailyon.promotionservice.common.util;
 
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
+import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
 import java.util.concurrent.TimeUnit;
 
 
+@RequiredArgsConstructor
 public class RedisDistributedLockManager {
 
     private final RedissonClient redissonClient;
-
-    public RedisDistributedLockManager(RedissonClient redissonClient) {
-        this.redissonClient = redissonClient;
-    }
 
     public interface LockCallback<T> {
         T doInLock();
