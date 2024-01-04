@@ -1,6 +1,7 @@
 package com.dailyon.promotionservice.config;
 
 
+import com.dailyon.promotionservice.common.util.RedisDistributedLockManager;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -11,8 +12,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-
-import java.io.IOException;
 
 @Configuration
 public class RedisConfig {
@@ -47,6 +46,12 @@ public class RedisConfig {
         }
 
         return Redisson.create(config);
+    }
+
+    // RedisLockConfig 설정 대신해주는 Bean
+    @Bean
+    public RedisDistributedLockManager redisDistributedLockManager(RedissonClient redissonClient) {
+        return new RedisDistributedLockManager(redissonClient);
     }
 
     @Bean
