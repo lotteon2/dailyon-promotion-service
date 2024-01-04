@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.service;
 
 
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
+import com.dailyon.promotionservice.common.util.RedisDistributedLockManager;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponCreateRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponModifyRequest;
 import com.dailyon.promotionservice.domain.coupon.api.request.CouponValidationRequest;
@@ -38,6 +39,9 @@ public class CouponService {
     private final CouponInfoRepository couponInfoRepository;
     private final CouponAppliesToRepository couponAppliesToRepository;
     private final MemberCouponRepository memberCouponRepository;
+
+    private final RedisDistributedLockManager lockManager;
+    private final String couponDownloadLockPrefix = "Redisson_key_couponInfo:";
 
     private final CouponEventProducer couponEventProducer;
 
@@ -186,21 +190,27 @@ public class CouponService {
                 .collect(Collectors.toList());
     }
 
-    // TODO: 동시성 이슈 처리
+
     @Transactional
     public void downloadCoupon(Long memberId, Long couponId) {
-        CouponInfo couponInfo = couponInfoRepository.findById(couponId)
-                .orElseThrow(() -> new EntityNotFoundException("Coupon not found"));
+        String lockKey = couponDownloadLockPrefix + couponId;
 
-        couponInfo.decreaseRemainingQuantity();
+        // 분산락으로 처리 - primary-secondary로 나뉜 redis cluster니까 장애에 강하지만, 만약 secondary까지 모두 죽는다면?
+        lockManager.lock(lockKey, () -> {
+            CouponInfo couponInfo = couponInfoRepository.findById(couponId)
+                    .orElseThrow(() -> new EntityNotFoundException("Coupon not found"));
 
-        MemberCoupon memberCoupon = MemberCoupon.builder()
-                .memberId(memberId)
-                .couponInfoId(couponInfo.getId())
-                .createdAt(LocalDateTime.now())
-                .isUsed(false)
-                .build();
-        memberCouponRepository.save(memberCoupon);
+                couponInfo.decreaseRemainingQuantity();
+                MemberCoupon memberCoupon = MemberCoupon.builder()
+                        .memberId(memberId)
+                        .couponInfoId(couponInfo.getId())
+                        .createdAt(LocalDateTime.now())
+                        .isUsed(false)
+                        .build();
+                memberCouponRepository.save(memberCoupon);
+            return null;
+            // service 로직이 처리 된 후에 lock 반납
+        });
     }
 
     @Transactional
