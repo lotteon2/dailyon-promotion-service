@@ -71,10 +71,10 @@ public class RedisConfig {
             // Standalone configuration
             String singleServerConfig = "redis://" + env.getProperty("spring.redis.host") + ":" + env.getProperty("spring.redis.port");
             config.useSingleServer().setAddress(singleServerConfig);
-            String password = env.getProperty("spring.redis.password");
-            if (password != null && !password.isEmpty()) {
-                config.useSingleServer().setPassword(password);
-            }
+//            String password = env.getProperty("spring.redis.password");
+//            if (password != null && !password.isEmpty()) {
+//                config.useSingleServer().setPassword(password);
+//            }
         } else {
             // Cluster configuration
             String[] nodeAddresses = env.getProperty("spring.redis.cluster.nodes").split(",");
