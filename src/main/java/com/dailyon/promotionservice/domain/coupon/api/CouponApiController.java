@@ -9,6 +9,9 @@ import com.dailyon.promotionservice.domain.coupon.exceptions.InvalidDiscountExce
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +31,16 @@ public class CouponApiController {
     //     List<CouponExistenceResponse> couponExistenceList = couponService.checkCouponsExistenceByProductIds(productIds);
     //     return ResponseEntity.ok(couponExistenceList);
     // }
+
+    @GetMapping("/my-coupons")
+    public ResponseEntity<MemberCouponInfoReadPageResponse> getMyCoupons(
+            @RequestParam Long memberId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        MemberCouponInfoReadPageResponse response = couponService.getMemberCouponsPage(memberId, pageable);
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping(value = "/single-product", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
     public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {
