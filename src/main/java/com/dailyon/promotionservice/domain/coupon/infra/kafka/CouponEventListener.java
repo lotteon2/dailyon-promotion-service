@@ -42,7 +42,7 @@ public class CouponEventListener {
             } else {
                 log.error("Order processing 실패, orderDTO가 null, order event 업데이트 불가능", e);
             }
-            throw new ErrorResponseException("쿠폰 사용처리 도중 에러");
+            log.error(e.getMessage());
         } finally {
             ack.acknowledge();
         }
