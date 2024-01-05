@@ -365,6 +365,16 @@ public class CouponService {
                 .build();
     }
 
+    public MemberCouponInfoReadPageResponse getMemberCouponsPage(Long memberId, Pageable pageable) {
+        Page<MemberCoupon> memberCouponPage = memberCouponRepository.findMemberCouponsWithCouponInfoByMemberId(memberId, pageable);
+
+        List<MemberCouponInfoReadItemResponse> items = memberCouponPage.getContent().stream()
+                .map(mc -> MemberCouponInfoReadItemResponse.ofEntities(mc.getCouponInfo(), mc))
+                .collect(Collectors.toList());
+
+        return new MemberCouponInfoReadPageResponse(items, memberCouponPage.getTotalElements());
+    }
+
     // TODO: 추상화해서 공통로직 뺴기.
     // validateCouponsForOrder 메소드에도 같은 필터 로직이 있음.(변수 이름 같지만, 객체 타입이 달라서 추상화 필요)
     private boolean isCouponApplicable(CouponInfo couponInfo, MultipleProductsCouponRequest.ProductCategoryPair pair) {
