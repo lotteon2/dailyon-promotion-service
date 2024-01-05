@@ -59,10 +59,15 @@ public class MemberCouponRepositoryCustomImpl extends QuerydslRepositorySupport 
     public Page<MemberCoupon> findMemberCouponsWithCouponInfoByMemberId(Long memberId, Pageable pageable) {
         QMemberCoupon memberCoupon = QMemberCoupon.memberCoupon;
         QCouponInfo couponInfo = QCouponInfo.couponInfo;
+        LocalDateTime now = LocalDateTime.now();
+
 
         JPQLQuery<MemberCoupon> query = from(memberCoupon)
                 .innerJoin(memberCoupon.couponInfo, couponInfo).fetchJoin()
-                .where(memberCoupon.memberId.eq(memberId))
+                .where(memberCoupon.memberId.eq(memberId)
+                        .and(couponInfo.startAt.loe(now))
+                        .and(couponInfo.endAt.goe(now))
+                )
                 .orderBy(memberCoupon.createdAt.desc());
 
         JPQLQuery<MemberCoupon> pageableQuery = getQuerydsl().applyPagination(pageable, query);
