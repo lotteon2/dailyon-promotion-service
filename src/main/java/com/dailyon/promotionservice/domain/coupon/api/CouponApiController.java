@@ -34,7 +34,7 @@ public class CouponApiController {
 
     @GetMapping("/my-coupons")
     public ResponseEntity<MemberCouponInfoReadPageResponse> getMyCoupons(
-            @RequestParam Long memberId,
+            @RequestHeader long memberId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         MemberCouponInfoReadPageResponse response = couponService.getMemberCouponsPage(memberId, pageable);
