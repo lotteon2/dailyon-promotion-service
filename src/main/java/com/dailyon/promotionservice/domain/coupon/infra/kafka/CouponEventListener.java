@@ -77,8 +77,10 @@ public class CouponEventListener {
     @KafkaListener(topics = "create-refund"/*KafkaTopic.CREATE_REFUND*/)  
     public void onRefundEvent(String message, Acknowledgment ack) {  
         try {  
-            RefundDTO refundDto = objectMapper.readValue(message, RefundDTO.class);  
-            couponService.restoreUsedCoupons(refundDto.getMemberId(), List.of(refundDto.getCouponInfoId()));
+            RefundDTO refundDto = objectMapper.readValue(message, RefundDTO.class);
+            if (refundDto.getCouponInfoId() != null) {
+                couponService.restoreUsedCoupons(refundDto.getMemberId(), List.of(refundDto.getCouponInfoId()));
+            }
             ack.acknowledge();  
         } catch (Exception e) {  
             log.error(e.getMessage());  
