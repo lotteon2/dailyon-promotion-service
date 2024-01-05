@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice.config;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -78,6 +79,9 @@ public class RedisConfig {
         } else {
             // Cluster configuration
             String[] nodeAddresses = env.getProperty("spring.redis.cluster.nodes").split(",");
+            for(int i = 0; i < nodeAddresses.length; i++) {
+                nodeAddresses[i] = String.format("redis://%s", nodeAddresses[i]);
+            }
             config.useClusterServers()
                     .addNodeAddress(nodeAddresses); // nodeAddresses should be prefixed with "redis://" if not already done.
 
