@@ -2,6 +2,7 @@ package com.dailyon.promotionservice.domain.coupon.infra.kafka;
 
 import com.dailyon.promotionservice.common.exceptions.ErrorResponseException;
 import com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.OrderDTO;
+import com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.RefundDTO;
 import com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.enums.OrderEvent;
 import com.dailyon.promotionservice.domain.coupon.service.CouponService;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 import static com.dailyon.promotionservice.domain.coupon.infra.kafka.dto.enums.OrderEvent.*;
 
@@ -69,5 +72,16 @@ public class CouponEventListener {
         } catch (Exception e) {
             throw new ErrorResponseException("쿠폰 보상처리 중 에러");
         }
+    }
+
+    @KafkaListener(topics = "create-refund"/*KafkaTopic.CREATE_REFUND*/)  
+    public void onRefundEvent(String message, Acknowledgment ack) {  
+        try {  
+            RefundDTO refundDto = objectMapper.readValue(message, RefundDTO.class);  
+            couponService.restoreUsedCoupons(refundDto.getMemberId(), List.of(refundDto.getCouponInfoId()));
+            ack.acknowledge();  
+        } catch (Exception e) {  
+            log.error(e.getMessage());  
+        }  
     }
 }
