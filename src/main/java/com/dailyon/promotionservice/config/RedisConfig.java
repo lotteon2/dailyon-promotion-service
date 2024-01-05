@@ -79,8 +79,8 @@ public class RedisConfig {
             // Cluster configuration
             String[] nodeAddresses = env.getProperty("spring.redis.cluster.nodes").split(",");
             config.useClusterServers()
-                    .addNodeAddress(nodeAddresses) // nodeAddresses should be prefixed with "redis://" if not already done.
-                    .setPassword(env.getProperty("spring.redis.password")); // assuming password is the same for all nodes in cluster
+                    .addNodeAddress(nodeAddresses); // nodeAddresses should be prefixed with "redis://" if not already done.
+
       }
       return Redisson.create(config);
     }
