@@ -4,7 +4,13 @@ import com.dailyon.promotionservice.domain.coupon.entity.MemberCoupon;
 import com.dailyon.promotionservice.domain.coupon.entity.QCouponAppliesTo;
 import com.dailyon.promotionservice.domain.coupon.entity.QCouponInfo;
 import com.dailyon.promotionservice.domain.coupon.entity.QMemberCoupon;
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.time.LocalDateTime;
@@ -47,5 +53,21 @@ public class MemberCouponRepositoryCustomImpl extends QuerydslRepositorySupport 
                         .and(qMemberCoupon.couponInfoId.in(couponInfoIds)));
 
         return query.fetch();
+    }
+
+    @Override
+    public Page<MemberCoupon> findMemberCouponsWithCouponInfoByMemberId(Long memberId, Pageable pageable) {
+        QMemberCoupon memberCoupon = QMemberCoupon.memberCoupon;
+        QCouponInfo couponInfo = QCouponInfo.couponInfo;
+
+        JPQLQuery<MemberCoupon> query = from(memberCoupon)
+                .innerJoin(memberCoupon.couponInfo, couponInfo).fetchJoin()
+                .where(memberCoupon.memberId.eq(memberId))
+                .orderBy(memberCoupon.createdAt.desc());
+
+        JPQLQuery<MemberCoupon> pageableQuery = getQuerydsl().applyPagination(pageable, query);
+        QueryResults<MemberCoupon> queryResults = pageableQuery.fetchResults();
+
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }
