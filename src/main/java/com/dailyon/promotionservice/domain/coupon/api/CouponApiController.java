@@ -70,6 +70,13 @@ public class CouponApiController {
         return ResponseEntity.ok("성공적으로 쿠폰을 다운로드 했습니다.");
     }
 
+    @PostMapping("/download-multiple")
+    public ResponseEntity<MultipleCouponDownloadResponse> downloadMultipleCoupons(@RequestHeader("memberId") Long memberId,
+                                                                  @RequestBody List<Long> couponInfoIds) {
+        MultipleCouponDownloadResponse multipleCouponDownloadResponse = couponService.downloadCoupons(memberId, couponInfoIds);
+        return ResponseEntity.ok(multipleCouponDownloadResponse);
+    }
+
     @PostMapping("/retrieve-applicable")
     public ResponseEntity<CheckoutCouponApplicationResponse> getCouponsForCheckout(@RequestHeader Long memberId,
                                                                                    @RequestBody MultipleProductsCouponRequest request) {
