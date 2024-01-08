@@ -65,6 +65,7 @@ public class MemberCouponRepositoryCustomImpl extends QuerydslRepositorySupport 
         JPQLQuery<MemberCoupon> query = from(memberCoupon)
                 .innerJoin(memberCoupon.couponInfo, couponInfo).fetchJoin()
                 .where(memberCoupon.memberId.eq(memberId)
+                        .and(memberCoupon.isUsed.eq(false))
                         .and(couponInfo.startAt.loe(now))
                         .and(couponInfo.endAt.goe(now))
                 )
