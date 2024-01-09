@@ -87,6 +87,8 @@ public class CouponInfo extends BaseTimeEntity implements Serializable {
             this.requiresConcurrencyControl = request.getRequiresConcurrencyControl();
         }
         if (request.getTargetImgUrl() != null) { this.targetImgUrl = request.getTargetImgUrl(); }
+        if (request.getMinPurchaseAmount() != null) { this.minPurchaseAmount = request.getMinPurchaseAmount(); }
+        if (request.getMaxDiscountAmount() != null) { this.maxDiscountAmount = request.getMaxDiscountAmount(); }
     }
 
     public void invalidateCoupon() {

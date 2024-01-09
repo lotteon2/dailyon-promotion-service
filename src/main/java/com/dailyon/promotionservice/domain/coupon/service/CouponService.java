@@ -199,18 +199,35 @@ public class CouponService {
         lockManager.lock(lockKey, () -> {
             CouponInfo couponInfo = couponInfoRepository.findById(couponId)
                     .orElseThrow(() -> new EntityNotFoundException("Coupon not found"));
-
                 couponInfo.decreaseRemainingQuantity();
+
                 MemberCoupon memberCoupon = MemberCoupon.builder()
-                        .memberId(memberId)
-                        .couponInfoId(couponInfo.getId())
-                        .createdAt(LocalDateTime.now())
-                        .isUsed(false)
-                        .build();
+                    .memberId(memberId)
+                    .couponInfoId(couponId)
+                    .createdAt(LocalDateTime.now())
+                    .isUsed(false)
+                    .build();
                 memberCouponRepository.save(memberCoupon);
             return null;
             // service 로직이 처리 된 후에 lock 반납
         });
+
+
+    }
+
+    @Transactional
+    public MultipleCouponDownloadResponse downloadCoupons(Long memberId, List<Long> couponInfoIds) {
+        MultipleCouponDownloadResponse multipleCouponDownloadResponse = MultipleCouponDownloadResponse.builder().build();
+        for( Long couponInfoId : couponInfoIds) {
+            try {
+                downloadCoupon(memberId, couponInfoId);
+                multipleCouponDownloadResponse.addSuccess(couponInfoId);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                multipleCouponDownloadResponse.addFailure(couponInfoId);
+            }
+        }
+        return multipleCouponDownloadResponse;
     }
 
     @Transactional
