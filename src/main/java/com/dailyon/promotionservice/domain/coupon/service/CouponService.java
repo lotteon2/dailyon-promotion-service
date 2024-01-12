@@ -19,6 +19,9 @@ import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepositor
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -44,6 +48,7 @@ public class CouponService {
     private final String couponDownloadLockPrefix = "Redisson_key_couponInfo:";
 
     private final CouponEventProducer couponEventProducer;
+    private final RedissonClient redissonClient;
 
     @Transactional
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
@@ -199,27 +204,37 @@ public class CouponService {
             });
 
         String lockKey = couponDownloadLockPrefix + couponId;
-        // 분산락으로 처리 - primary-secondary로 나뉜 redis cluster니까 장애에 강하지만, 만약 secondary까지 모두 죽는다면?
-        lockManager.lock(lockKey, () -> {
+
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean isLocked = lock.tryLock(10, 2, TimeUnit.SECONDS);
+            if (!isLocked) {
+                // 다른 곳에서 락이 이미 사용 중일 때 발생 ( 2초동안 pub/sub으로 시도하다가 실패하면 예외 던짐 )
+                throw new ErrorResponseException("락 획득 실패. 다른 요청이 락을 이미 보유하고 있거나 시스템에 지연이 있을 수 있음. - key: " + lockKey);
+            }
+            log.info("락 획득 후 로직 발동" + lockKey);
+            
             int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
             if (updatedCount == 0) {
                 throw new ErrorResponseException("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.");
             }
-            
-            memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
-            .ifPresent(mc -> {
-                throw new ErrorResponseException("동시발급요청.");
-            });
-                MemberCoupon memberCoupon = MemberCoupon.builder()
-                    .memberId(memberId)
-                    .couponInfoId(couponId)
-                    .createdAt(LocalDateTime.now())
-                    .isUsed(false)
-                    .build();
-                memberCouponRepository.save(memberCoupon);
-            return null;
-            // service 로직이 처리 된 후에 lock 반납
-        });
+            MemberCoupon memberCoupon = MemberCoupon.builder()
+                .memberId(memberId)
+                .couponInfoId(couponId)
+                .createdAt(LocalDateTime.now())
+                .isUsed(false)
+                .build();
+            memberCouponRepository.save(memberCoupon);
+                
+        } catch (InterruptedException e) {
+            // 다른 쓰레드가 대기 중인 현재 쓰레드를 방해할 때 발생
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("대기 중인 락이 인터럽트 됨. 서비스가 종료되거나 재시작되는 등의 상황에서 발생할 수 있음. - key: " + lockKey);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
 
