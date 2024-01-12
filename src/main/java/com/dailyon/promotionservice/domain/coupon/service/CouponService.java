@@ -191,7 +191,7 @@ public class CouponService {
     }
 
 
-    
+    @Transactional
     public void downloadCoupon(Long memberId, Long couponId) {
         memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
             .ifPresent(mc -> {
@@ -201,15 +201,7 @@ public class CouponService {
         String lockKey = couponDownloadLockPrefix + couponId;
         // 분산락으로 처리 - primary-secondary로 나뉜 redis cluster니까 장애에 강하지만, 만약 secondary까지 모두 죽는다면?
         lockManager.lock(lockKey, () -> {
-            execDownloadCouponTransaction(memberId, couponId);
-            return null;
-            // service 로직이 처리 된 후에 lock 반납
-        });
-    }
-
-    @Transactional
-    public void execDownloadCouponTransaction(Long memberId, Long couponId) {
-        int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
+            int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
             if (updatedCount == 0) {
                 throw new ErrorResponseException("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.");
             }
@@ -220,8 +212,12 @@ public class CouponService {
                     .isUsed(false)
                     .build();
                 memberCouponRepository.save(memberCoupon);
+            return null;
+            // service 로직이 처리 된 후에 lock 반납
+        });
     }
 
+    
     @Transactional
     public MultipleCouponDownloadResponse downloadCoupons(Long memberId, List<Long> couponInfoIds) {
         MultipleCouponDownloadResponse multipleCouponDownloadResponse = MultipleCouponDownloadResponse.builder().build();
