@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -48,7 +49,8 @@ public class CouponService {
     private final String couponDownloadLockPrefix = "Redisson_key_couponInfo:";
 
     private final CouponEventProducer couponEventProducer;
-    private final RedissonClient redissonClient;
+    private final EntityManager entityManager;
+//    private final RedissonClient redissonClient;
 
     @Transactional
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
@@ -205,36 +207,32 @@ public class CouponService {
 
         String lockKey = couponDownloadLockPrefix + couponId;
 
-        RLock lock = redissonClient.getLock(lockKey);
-        try {
-            boolean isLocked = lock.tryLock(10, 2, TimeUnit.SECONDS);
-            if (!isLocked) {
-                // 다른 곳에서 락이 이미 사용 중일 때 발생 ( 2초동안 pub/sub으로 시도하다가 실패하면 예외 던짐 )
-                throw new ErrorResponseException("락 획득 실패. 다른 요청이 락을 이미 보유하고 있거나 시스템에 지연이 있을 수 있음. - key: " + lockKey);
-            }
-            log.info("락 획득 후 로직 발동" + lockKey);
-            
-            int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
-            if (updatedCount == 0) {
-                throw new ErrorResponseException("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.");
-            }
-            MemberCoupon memberCoupon = MemberCoupon.builder()
+        lockManager.lock(lockKey, () -> {
+            processDownloadCoupon(memberId, couponId);
+            return null;
+        });
+    }
+
+    @Transactional
+    public void processDownloadCoupon(Long memberId, Long couponId) {
+        memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
+                .ifPresent(mc -> {
+                    throw new ErrorResponseException("이미 쿠폰을 발급한 사용자입니다.");
+                });
+
+        int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
+        if (updatedCount == 0) {
+            throw new ErrorResponseException("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.");
+        }
+
+        MemberCoupon memberCoupon = MemberCoupon.builder()
                 .memberId(memberId)
                 .couponInfoId(couponId)
                 .createdAt(LocalDateTime.now())
                 .isUsed(false)
                 .build();
-            memberCouponRepository.save(memberCoupon);
-                
-        } catch (InterruptedException e) {
-            // 다른 쓰레드가 대기 중인 현재 쓰레드를 방해할 때 발생
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("대기 중인 락이 인터럽트 됨. 서비스가 종료되거나 재시작되는 등의 상황에서 발생할 수 있음. - key: " + lockKey);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+        memberCouponRepository.save(memberCoupon);
+        entityManager.flush(); // 바로 flush로 DB 반영해줘야 동시성 문제 해결.
     }
 
 
