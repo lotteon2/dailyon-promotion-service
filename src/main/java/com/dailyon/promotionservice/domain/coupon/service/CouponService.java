@@ -205,6 +205,11 @@ public class CouponService {
             if (updatedCount == 0) {
                 throw new ErrorResponseException("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.");
             }
+            
+            memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
+            .ifPresent(mc -> {
+                throw new ErrorResponseException("동시발급요청.");
+            });
                 MemberCoupon memberCoupon = MemberCoupon.builder()
                     .memberId(memberId)
                     .couponInfoId(couponId)
@@ -217,7 +222,7 @@ public class CouponService {
         });
     }
 
-    
+
     @Transactional
     public MultipleCouponDownloadResponse downloadCoupons(Long memberId, List<Long> couponInfoIds) {
         MultipleCouponDownloadResponse multipleCouponDownloadResponse = MultipleCouponDownloadResponse.builder().build();

@@ -9,6 +9,8 @@ import org.redisson.api.RedissonClient;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.transaction.Transactional;
+
 @Slf4j
 @RequiredArgsConstructor
 public class RedisDistributedLockManager {
@@ -19,6 +21,7 @@ public class RedisDistributedLockManager {
         T doInLock();
     }
 
+    @Transactional
     public <T> T lock(String lockKey, LockCallback<T> callback) {
         RLock lock = redissonClient.getLock(lockKey);
         try {
