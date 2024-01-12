@@ -193,8 +193,12 @@ public class CouponService {
 
     @Transactional
     public void downloadCoupon(Long memberId, Long couponId) {
-        String lockKey = couponDownloadLockPrefix + couponId;
+        memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
+            .ifPresent(mc -> {
+                throw new ErrorResponseException("이미 쿠폰을 발급한 사용자입니다.");
+            });
 
+        String lockKey = couponDownloadLockPrefix + couponId;
         // 분산락으로 처리 - primary-secondary로 나뉜 redis cluster니까 장애에 강하지만, 만약 secondary까지 모두 죽는다면?
         lockManager.lock(lockKey, () -> {
             CouponInfo couponInfo = couponInfoRepository.findById(couponId)
