@@ -3,6 +3,7 @@ package com.dailyon.promotionservice.domain.coupon.repository;
 import com.dailyon.promotionservice.domain.coupon.entity.CouponInfo;
 import com.dailyon.promotionservice.domain.coupon.repository.custom.CouponInfoRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -53,4 +54,8 @@ public interface CouponInfoRepository extends JpaRepository<CouponInfo, Long>, Q
             "AND CURRENT_TIMESTAMP BETWEEN ci.startAt AND ci.endAt " +
             "AND ci.remainingQuantity > 0")
     List<CouponInfo> findActiveCouponsForCategory(@Param("categoryId") Long categoryId);
+
+    @Modifying
+    @Query("UPDATE CouponInfo ci SET ci.remainingQuantity = ci.remainingQuantity - 1 WHERE ci.id = :id AND ci.remainingQuantity > 0")
+    int decreaseRemainingQuantity(@Param("id") Long id);
 }

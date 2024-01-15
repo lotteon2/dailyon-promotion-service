@@ -6,6 +6,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 //@ActiveProfiles("local")
+@ActiveProfiles("test")
 @Configuration
 public class RedisTestContainers {
 
@@ -19,6 +20,9 @@ public class RedisTestContainers {
 
         REDIS_CONTAINER.start();
 
+        System.out.println("테스트 컨테이너 시작");
+        System.out.println(REDIS_CONTAINER.getHost());
+        System.out.println(REDIS_CONTAINER.getMappedPort(6379).toString());
         System.setProperty("spring.redis.host", REDIS_CONTAINER.getHost());
         System.setProperty("spring.redis.port", REDIS_CONTAINER.getMappedPort(6379).toString());
     }

@@ -21,6 +21,7 @@ public class OrderDTO {
     private Long memberId;
     private int usedPoints;
     private OrderEvent orderEvent;
+    private String referralCode;
 //    TODO: tOrder는 order Service의 dynamoDB 테이블임. nexus repository에 올라오는걸 기다리고 이후 대체할 예정. 현재 로직에 필요 없어서 주석처리함.
 //    private TOrder tOrder;
 

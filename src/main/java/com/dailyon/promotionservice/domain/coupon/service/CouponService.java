@@ -19,14 +19,19 @@ import com.dailyon.promotionservice.domain.coupon.repository.CouponInfoRepositor
 import com.dailyon.promotionservice.domain.coupon.repository.MemberCouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -44,6 +49,8 @@ public class CouponService {
     private final String couponDownloadLockPrefix = "Redisson_key_couponInfo:";
 
     private final CouponEventProducer couponEventProducer;
+    private final EntityManager entityManager;
+//    private final RedissonClient redissonClient;
 
     @Transactional
     public Long createCouponInfoWithAppliesTo(CouponCreateRequest request) {
@@ -193,27 +200,50 @@ public class CouponService {
 
     @Transactional
     public void downloadCoupon(Long memberId, Long couponId) {
+        memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
+            .ifPresent(mc -> {
+                throw new ErrorResponseException("이미 쿠폰을 발급한 사용자입니다.");
+            });
+
         String lockKey = couponDownloadLockPrefix + couponId;
 
-        // 분산락으로 처리 - primary-secondary로 나뉜 redis cluster니까 장애에 강하지만, 만약 secondary까지 모두 죽는다면?
         lockManager.lock(lockKey, () -> {
-            CouponInfo couponInfo = couponInfoRepository.findById(couponId)
-                    .orElseThrow(() -> new EntityNotFoundException("Coupon not found"));
-                couponInfo.decreaseRemainingQuantity();
-
-                MemberCoupon memberCoupon = MemberCoupon.builder()
-                    .memberId(memberId)
-                    .couponInfoId(couponId)
-                    .createdAt(LocalDateTime.now())
-                    .isUsed(false)
-                    .build();
-                memberCouponRepository.save(memberCoupon);
+            processDownloadCoupon(memberId, couponId);
             return null;
-            // service 로직이 처리 된 후에 lock 반납
         });
-
-
     }
+
+    @Transactional
+    public void processDownloadCoupon(Long memberId, Long couponId) {
+        memberCouponRepository.findByMemberIdAndCouponInfoId(memberId, couponId)
+                .ifPresent(mc -> {
+                    throw new ErrorResponseException("이미 쿠폰을 발급한 사용자입니다.");
+                });
+        CouponInfo couponInfo = couponInfoRepository.findById(couponId)
+                .orElseThrow(() -> new ErrorResponseException("해당 쿠폰 정보를 찾을 수 없습니다."));
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expirationTimeWithGracePeriod = couponInfo.getEndAt().plusHours(1);
+        if (now.isBefore(couponInfo.getStartAt()) || now.isAfter(expirationTimeWithGracePeriod)) {
+            throw new ErrorResponseException("해당 쿠폰 이벤트는 만료된 이벤트입니다.");
+        }
+
+        int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
+        if (updatedCount == 0) {
+            throw new ErrorResponseException("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.");
+        }
+
+        MemberCoupon memberCoupon = MemberCoupon.builder()
+                .memberId(memberId)
+                .couponInfoId(couponId)
+                .createdAt(LocalDateTime.now())
+                .isUsed(false)
+                .build();
+        memberCouponRepository.save(memberCoupon);
+        entityManager.flush(); // 바로 flush로 DB 반영해줘야 동시성 문제 해결.
+        entityManager.clear();
+    }
+
 
     @Transactional
     public MultipleCouponDownloadResponse downloadCoupons(Long memberId, List<Long> couponInfoIds) {
