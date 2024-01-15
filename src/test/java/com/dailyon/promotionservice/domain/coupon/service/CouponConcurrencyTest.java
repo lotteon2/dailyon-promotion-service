@@ -68,8 +68,8 @@ public class CouponConcurrencyTest {
 
     @AfterEach
     void tearDown() {
-        memberCouponRepository.deleteAll();
-        couponInfoRepository.deleteAll();
+        memberCouponRepository.deleteAllInBatch();
+        couponInfoRepository.deleteAllInBatch();
     }
 
 
@@ -102,7 +102,7 @@ public class CouponConcurrencyTest {
         executorService.shutdown();
 
         Integer issuedQ = couponInfoRepository.findById(couponId).get().getIssuedQuantity();
-        Integer remainingQ = couponInfoRepository.findById(1L).get().getRemainingQuantity();
+        Integer remainingQ = couponInfoRepository.findById(couponId).get().getRemainingQuantity();
         Integer issuedListSize = memberCouponRepository.findByMemberId(1L).size();
         System.out.println("1번 동시성 테스트 종료 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         System.out.println(issuedListSize);
