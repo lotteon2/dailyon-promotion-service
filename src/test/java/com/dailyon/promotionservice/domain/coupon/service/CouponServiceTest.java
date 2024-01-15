@@ -40,6 +40,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Transactional
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -299,6 +300,8 @@ public class CouponServiceTest {
         Long memberId = 1L;
         Long couponInfoId = normalCategoryDataSetup();
         Optional<CouponInfo> optionalCouponInfo = couponInfoRepository.findById(couponInfoId);
+//        System.out.println("최초 조회개수: " + optionalCouponInfo.get().getRemainingQuantity().toString());
+
         assertTrue(optionalCouponInfo.isPresent());
         CouponInfo couponInfo = optionalCouponInfo.get();
         int initialRemainingQuantity = couponInfo.getRemainingQuantity();
@@ -306,8 +309,11 @@ public class CouponServiceTest {
         // when
         couponService.downloadCoupon(memberId, couponInfoId);
 
+        Optional<CouponInfo> resCouponInfo = couponInfoRepository.findById(couponInfoId);
+        int remainingQuantity = resCouponInfo.get().getRemainingQuantity();
+
         // then
-        assertEquals(initialRemainingQuantity - 1, couponInfo.getRemainingQuantity());
+        assertEquals(initialRemainingQuantity - 1, remainingQuantity);
     }
 
     @Test
@@ -344,7 +350,7 @@ public class CouponServiceTest {
         });
 
         // then
-        assertEquals("해당 쿠폰이 모두 소진되었습니다.", exception.getMessage());
+        assertEquals("해당 쿠폰이 모두 소진되었거나 존재하지 않습니다.", exception.getMessage());
     }
 
 
