@@ -219,6 +219,14 @@ public class CouponService {
                 .ifPresent(mc -> {
                     throw new ErrorResponseException("이미 쿠폰을 발급한 사용자입니다.");
                 });
+        CouponInfo couponInfo = couponInfoRepository.findById(couponId)
+                .orElseThrow(() -> new ErrorResponseException("해당 쿠폰 정보를 찾을 수 없습니다."));
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expirationTimeWithGracePeriod = couponInfo.getEndAt().plusHours(1);
+        if (now.isBefore(couponInfo.getStartAt()) || now.isAfter(expirationTimeWithGracePeriod)) {
+            throw new ErrorResponseException("해당 쿠폰 이벤트는 만료된 이벤트입니다.");
+        }
 
         int updatedCount = couponInfoRepository.decreaseRemainingQuantity(couponId);
         if (updatedCount == 0) {
@@ -233,6 +241,7 @@ public class CouponService {
                 .build();
         memberCouponRepository.save(memberCoupon);
         entityManager.flush(); // 바로 flush로 DB 반영해줘야 동시성 문제 해결.
+        entityManager.clear();
     }
 
 
