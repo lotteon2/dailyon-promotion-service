@@ -24,7 +24,7 @@ public class CouponsCacheManager {
     private final ObjectMapper objectMapper;
 
     private static final String COUPONS_CACHE_PREFIX = "multiple-products-coupons::";
-    private static final long COUPONS_CACHE_TTL_MINUTES = 30;
+    private static final long COUPONS_CACHE_TTL_MINUTES = 3;
 
 
 
