@@ -41,6 +41,13 @@ public class CouponApiController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping(value = "/multiple-products") // listView를 위함. memberId 필요없음. client에서 조회
+    public ResponseEntity<MultipleProductCouponsResponse> getMultipleProductsCoupons(
+            @RequestBody MultipleProductsCouponRequest request) {
+
+        MultipleProductCouponsResponse couponsMap = couponService.getActiveCouponsForMultipleProductsAndCategories(request);
+        return ResponseEntity.ok(couponsMap);
+    }
 
     @GetMapping(value = "/single-product", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
     public ResponseEntity<List<CouponInfoItemResponse>> getSingleProductCoupon(@RequestParam long productId, @RequestParam long categoryId) {

@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 @Service
 public class CouponService {
+    private final CouponsCacheManager couponsCacheManager;
 
     private final CouponInfoRepository couponInfoRepository;
     private final CouponAppliesToRepository couponAppliesToRepository;
@@ -124,6 +125,12 @@ public class CouponService {
     }
 
     public MultipleProductCouponsResponse getActiveCouponsForMultipleProductsAndCategories(MultipleProductsCouponRequest request) {
+        // 캐시 hit시 그대로 반환
+        MultipleProductCouponsResponse cachedResponse = couponsCacheManager.getCachedCoupons(request);
+        if (cachedResponse != null) {
+            return cachedResponse;
+        }
+
         // 상품 ID와 카테고리 ID 목록 추출
         List<Long> productIds = request.getProducts().stream()
                 .map(MultipleProductsCouponRequest.ProductCategoryPair::getProductId)
@@ -152,7 +159,12 @@ public class CouponService {
                 }
             }
         }
-        return new MultipleProductCouponsResponse(productCouponsMap);
+
+        // 캐시에 쓰고 return
+        MultipleProductCouponsResponse response = new MultipleProductCouponsResponse(productCouponsMap);
+        couponsCacheManager.cacheCoupons(request, response);
+
+        return response;
     }
 
     public List<CouponInfoItemResponse> getActiveCouponsForProductAndCategory(long productId, long categoryId) {
