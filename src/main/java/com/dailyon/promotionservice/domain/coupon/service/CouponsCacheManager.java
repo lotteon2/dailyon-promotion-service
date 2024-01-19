@@ -1,5 +1,6 @@
 package com.dailyon.promotionservice.domain.coupon.service;
 
+import com.dailyon.promotionservice.domain.coupon.entity.enums.CouponTargetType;
 import com.dailyon.promotionservice.domain.coupon.service.response.MultipleProductCouponsResponse;
 import com.dailyon.promotionservice.domain.coupon.api.request.MultipleProductsCouponRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -7,10 +8,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -49,6 +54,46 @@ public class CouponsCacheManager {
             stringRedisTemplate.opsForValue().set(cacheKey, jsonData, COUPONS_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
         } catch (JsonProcessingException e) {
             log.error(e.toString());
+        }
+    }
+
+    public void evictCouponsRelatedToProduct(Long productId) {
+        String pattern = COUPONS_CACHE_PREFIX + "*" + productId + ";*";
+        Set<String> keys = new HashSet<>();
+
+        // Redis `SCAN` command 사용해서 패턴 찾음
+        Cursor<byte[]> cursor = stringRedisTemplate.getConnectionFactory().getConnection()
+                .scan(ScanOptions.scanOptions().match(pattern).count(1000).build());
+
+        while (cursor.hasNext()) {
+            keys.add(new String(cursor.next()));
+        }
+
+        // 패턴 매칭되면 모두 삭제
+        stringRedisTemplate.delete(keys);
+    }
+
+    public void evictCouponsRelatedToCategory(Long categoryId) {
+        String pattern = COUPONS_CACHE_PREFIX + "*;" + categoryId + "*";
+        Set<String> keys = new HashSet<>();
+
+        // Redis `SCAN` command 사용해서 패턴 찾음
+        Cursor<byte[]> cursor = stringRedisTemplate.getConnectionFactory().getConnection()
+                .scan(ScanOptions.scanOptions().match(pattern).count(1000).build());
+
+        while (cursor.hasNext()) {
+            keys.add(new String(cursor.next()));
+        }
+
+        // 패턴 매칭되면 모두 삭제
+        stringRedisTemplate.delete(keys);
+    }
+
+    public void evictCacheForAppliesTo(CouponTargetType appliesToType, Long appliesToId) {
+        if (appliesToType == CouponTargetType.PRODUCT) {
+            evictCouponsRelatedToProduct(appliesToId);
+        } else if (appliesToType == CouponTargetType.CATEGORY) {
+            evictCouponsRelatedToCategory(appliesToId);
         }
     }
 
