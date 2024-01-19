@@ -48,7 +48,7 @@ public class CouponCreateRequest {
                 }
                 break;
             case PERCENTAGE:
-                if (discountValue < 0 || discountValue > 100) {
+                if (discountValue < 0 || discountValue >= 100) {
                     return "Percentage discount value must be between 0 and 100.";
                 }
                 break;

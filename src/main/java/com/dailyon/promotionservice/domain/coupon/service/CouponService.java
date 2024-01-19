@@ -64,7 +64,13 @@ public class CouponService {
                 appliesToType,
                 request.getAppliesToName()
         );
+
         couponAppliesToRepository.save(appliesTo);
+        if (appliesToType == CouponTargetType.PRODUCT) {
+            couponsCacheManager.evictCouponsRelatedToProduct(request.getAppliesToId());
+        } else if (appliesToType == CouponTargetType.CATEGORY) {
+            couponsCacheManager.evictCouponsRelatedToCategory(request.getAppliesToId());
+        }
         return couponInfo.getId();
     }
 
@@ -87,6 +93,20 @@ public class CouponService {
         couponInfo.updateDetails(request);
         couponAppliesTo.updateDetails(request);
 
+        // 캐시 비우기
+        CouponTargetType oldAppliesToType = couponAppliesTo.getAppliesToType();
+        Long oldAppliesToId = couponAppliesTo.getAppliesToId();
+
+        CouponTargetType newAppliesToType = CouponTargetType.fromString(request.getAppliesToType());
+        Long newAppliesToId = request.getAppliesToId();
+
+        if ((!oldAppliesToType.equals(newAppliesToType)) || (!oldAppliesToId.equals(newAppliesToId))) {
+            couponsCacheManager.evictCacheForAppliesTo(oldAppliesToType, oldAppliesToId);
+            couponsCacheManager.evictCacheForAppliesTo(newAppliesToType, newAppliesToId);
+        } else {
+            couponsCacheManager.evictCacheForAppliesTo(newAppliesToType, newAppliesToId);
+        }
+
         return couponInfo.getId();
     }
 
@@ -99,6 +119,11 @@ public class CouponService {
         // 연관된 CouponAppliesTo entity는 cascade에 의해 삭제됨.
         couponAppliesToRepository.delete(couponAppliesTo);
 
+        if (couponAppliesTo.getAppliesToType() == CouponTargetType.PRODUCT) {
+            couponsCacheManager.evictCouponsRelatedToProduct(couponAppliesTo.getAppliesToId());
+        } else if (couponAppliesTo.getAppliesToType() == CouponTargetType.CATEGORY) {
+            couponsCacheManager.evictCouponsRelatedToCategory(couponAppliesTo.getAppliesToId());
+        }
     }
 
 
@@ -108,6 +133,13 @@ public class CouponService {
                 .orElseThrow(() -> new EntityNotFoundException("CouponInfo not found with id: " + couponInfoId));
 
         couponInfo.invalidateCoupon();
+
+        CouponAppliesTo couponAppliesTo = couponInfo.getAppliesTo();
+        if (couponAppliesTo.getAppliesToType() == CouponTargetType.PRODUCT) {
+            couponsCacheManager.evictCouponsRelatedToProduct(couponAppliesTo.getAppliesToId());
+        } else if (couponAppliesTo.getAppliesToType() == CouponTargetType.CATEGORY) {
+            couponsCacheManager.evictCouponsRelatedToCategory(couponAppliesTo.getAppliesToId());
+        }
 
         return couponInfoId;
     }
@@ -180,18 +212,23 @@ public class CouponService {
         ).collect(Collectors.toList());
     }
 
-    public List<CouponInfoItemWithAvailabilityResponse> getActiveCouponsForProductAndCategoryWithAvailability(long memberId,
+    public List<CouponInfoItemWithAvailabilityResponse> getActiveCouponsForProductAndCategoryWithAvailability(Long memberId,
                                                                                               long productId, long categoryId) {
         List<CouponInfo> couponInfos = couponInfoRepository.findCouponInfosByProductIdAndCategoryId(productId, categoryId);
 
-        Set<Long> downloadedCouponIds = memberCouponRepository.findByMemberId(memberId).stream()
-                .map(MemberCoupon::getCouponInfoId)
-                .collect(Collectors.toSet());
+        Set<Long> downloadedCouponIds;
+        if (memberId == null) { // 로그인 안되어있으면 거르지않고 상품상세에서 최고혜택가를 보여주기 위함.
+            downloadedCouponIds = new HashSet<>();
+        } else {
+            downloadedCouponIds = memberCouponRepository.findByMemberId(memberId).stream()
+                    .map(MemberCoupon::getCouponInfoId)
+                    .collect(Collectors.toSet());
+        }
 
         return couponInfos.stream()
                 .map(couponInfo -> CouponInfoItemWithAvailabilityResponse.from(
                         couponInfo,
-                        !downloadedCouponIds.contains(couponInfo.getId()))  // isDownloadable is true if memberId does not have this coupon
+                        !downloadedCouponIds.contains(couponInfo.getId()))
                 )
                 .collect(Collectors.toList());
     }
