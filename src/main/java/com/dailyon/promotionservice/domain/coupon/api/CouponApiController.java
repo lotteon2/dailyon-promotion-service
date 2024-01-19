@@ -55,10 +55,10 @@ public class CouponApiController {
         return ResponseEntity.ok(couponExistenceList);
     }
 
-    @GetMapping(value = "/single-product/with-availability", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시.
-    public ResponseEntity<List<CouponInfoItemWithAvailabilityResponse>> getSingleProductCouponWithAvailability(@RequestHeader long memberId,
+    @GetMapping(value = "/single-product/with-availability", params = {"productId", "categoryId"} ) // 둘 다 받아야함을 명시. memberId 없을때 상품상세에서 최적혜택가를 보여주기 위함
+    public ResponseEntity<List<CouponInfoItemWithAvailabilityResponse>> getSingleProductCouponWithAvailability(@RequestHeader(required = false) Long memberId,
             @RequestParam long productId, @RequestParam long categoryId) {
-        // memberId = 1L; // 인증 테스트 될 때까지 이렇게 진행.
+
         List<CouponInfoItemWithAvailabilityResponse> couponExistenceList = couponService.getActiveCouponsForProductAndCategoryWithAvailability(memberId, productId, categoryId);
         return ResponseEntity.ok(couponExistenceList);
     }
