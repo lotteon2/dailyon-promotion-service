@@ -489,6 +489,7 @@ public class CouponServiceTest {
                 .endAt(LocalDateTime.now().plusDays(20)) // 10 -> 20
                 .issuedQuantity(500) // 1000 -> 500
                 .requiresConcurrencyControl(false)
+                .appliesToType("PRODUCT")
                 .appliesToId(1L)
                 .targetImgUrl("https://image.url/updated-coupon.jpg") // url 변경값
                 .build();
